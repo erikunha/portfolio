@@ -106,9 +106,11 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     observer delivers once per frame, so sections jumped over between deliveries are never counted.
     Bring each target into the observer's band, wait for frames, and check the band geometrically.
 34. `page.goto` resolves at `load`, before React swaps a streamed Suspense boundary in. A spec that
-    measures or counts anything under `#sec-live-metrics`, `#sec-live-perf` or the `/links` feed
-    navigates with `gotoSettled` (`tests/e2e/_helpers/streamed.ts`). A read in the gap sees the
-    fallback, and the swap then detaches it: `getComputedStyle` returns `''` and `NaN` follows.
+    measures or counts anything under `#sec-live-metrics`, `#sec-live-perf`, the `/links` feed or the
+    locale switch in the topbar navigates with `gotoSettled` (`tests/e2e/_helpers/streamed.ts`).
+    A read in the gap sees the fallback, and the swap then detaches it: `getComputedStyle` returns `''` and `NaN` follows, and
+    `boundingBox()` returns `null`. Read a box with `boxOf` (`tests/e2e/_helpers/geometry.ts`), which
+    re-resolves the locator and fails naming the element, never with `?.x ?? 0`.
     The helper navigates to `domcontentloaded`, not `load`: WebKit holds `load` for as long as any
     one subresource (the manifest, a script chunk, a font) has not answered, and 30 seconds later
     `page.goto` times out on a page that was measurable at 270ms. It then waits for every self-hosted
@@ -331,6 +333,8 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 62. A new `@theme` token is also a new utility class, and a component class with the same name loses to it. `--spacing-fader` made Tailwind v4 emit `mx-fader`, a `margin-inline` utility, and the existing component class `.mx-fader` (`mx-` is a utility prefix) lost its width: the mobile fader went from 300px to 256px, with every unit test green. Only a computed-style crawl saw it. Before naming a token, grep `app/css` for `<utility>-<name>`. Check: `lint:css-tokens` fails any class in `app/css/*.css` that equals a generated utility name, and `scripts/__tests__/lint-css-tokens-class-collision.test.ts` covers it. A rule that only sets custom properties (the `.text-xs { --leading }` extensions) is not a collision.
 
 63. A test that sleeps a fixed number of milliseconds and then asserts on async work passes on a quiet machine and fails under load, because the work has no promise to be done by then. Two ask tests failed in loaded `ci:local` runs this way. Wait for the asserted condition with `vi.waitFor` (or `waitFor` when React must stay inside `act`). Wait for a node to be replaced, or for a mock that runs after the code under test, when the test asserts an absence. Use fake timers with `advanceTimersByTimeAsync` for time-based behaviour. Check: `check:test-integrity` fails an awaited `new Promise` holding `setTimeout` with a numeric literal delay, and `scripts/__tests__/check-test-integrity.test.ts` covers it. A real wait needs `behavioral-test-allow: <reason>`.
+
+64. A Playwright spec imports `test` from `tests/e2e/_helpers/test.ts`, never from `@playwright/test`, and a spec that launches its own browser passes it through `guardBrowser`, which patches `newContext` and `newPage` on every browser; only WebKit pages get the wrapped `goto`. The fixture navigates a WebKit first navigation lost in the `Cross-Origin-Opener-Policy` process swap once more, once per test, with a `webkit-coop-navigation-stall` annotation. A spec that needs its own fixtures extends that `test`, as `tests/e2e/_helpers/fixtures.ts` does. A test with the annotation passed through the containment: a server that sends no headers for 5 seconds looks the same. The reporter fails the run when 2 or more tests needed a recovery. Check: `__tests__/meta/e2e-navigation-guard.test.ts` and `__tests__/e2e-helpers/navigation-stall.test.ts`.
 
 ## Pre-push judgement list
 

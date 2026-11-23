@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { openSectionMenu } from './_helpers/hydration';
+import { expect, test } from './_helpers/test';
 
 const DRAWER = '.section-menu';
 const HEAD = '.menu-head';

@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
+import { expect, test } from './_helpers/test';
 
 const MOBILE = VIEWPORTS.PHONE;
 const DESKTOP = VIEWPORTS.DESKTOP;

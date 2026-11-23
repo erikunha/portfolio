@@ -1,8 +1,8 @@
-import { expect, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { installChunkedAsk } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR, shellCopy } from './_helpers/shell';
+import { expect, type Page, test } from './_helpers/test';
 
 const QUESTION = 'what does Erik build?';
 const FIRST_CHUNK = 'Erik builds agent ';

@@ -1,8 +1,8 @@
-import { expect, type Page, test } from '@playwright/test';
 import { NAVIGATION } from '../../content/navigation';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { openSectionMenu } from './_helpers/hydration';
 import { MOTION_CHOICE, MOTION_STORAGE_KEY } from './_helpers/motion';
+import { expect, type Page, test } from './_helpers/test';
 
 const { copy } = NAVIGATION[SITE_LOCALE.en];
 const MOTION_ROW = '.menu-motion';

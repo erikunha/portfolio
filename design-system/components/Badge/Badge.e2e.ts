@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 test.describe('Badge: behavioral E2E', () => {
   test('dot variant renders with aria-hidden dot span', async ({ page }) => {

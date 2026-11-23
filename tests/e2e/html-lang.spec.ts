@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { SECTION_LABELS } from '@/content/section-labels';
 import type { SectionId } from '@/content/section-registry';
 import { SITE_HTML_LANG, SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { expect, test } from './_helpers/test';
 
 const NOT_FOUND_STATUS = 404;
 

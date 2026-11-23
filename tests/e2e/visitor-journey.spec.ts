@@ -1,4 +1,3 @@
-import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { localizedSectionLabel, SECTION_ID } from '@/content/section-registry';
 import { shellUi } from '@/content/shell-ui';
@@ -12,6 +11,7 @@ import { openSectionMenu, waitForHydration } from './_helpers/hydration';
 import { installMockBackend, MOCK_ASK_ANSWER } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const SHELL_FORM = '[data-testid="shell-form"]';
 const SHELL_INPUT = '[aria-label="shell command"]';

@@ -1,5 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
 import { waitForHydration } from './_helpers/hydration';
+import { expect, type Page, test } from './_helpers/test';
 
 const SHELL_INPUT = '[aria-label="shell command"]';
 const SHELL_FORM = '[data-testid="shell-form"]';

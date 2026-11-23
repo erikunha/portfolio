@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
+import { expect, test } from './_helpers/test';
 
 test.use({ javaScriptEnabled: false });
 

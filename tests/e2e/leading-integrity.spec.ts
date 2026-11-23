@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './_helpers/test';
 
 // Every element's line box is a whole number of pixels.
 //

@@ -1,5 +1,5 @@
-import { expect, type Locator, test } from '@playwright/test';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
+import { expect, type Locator, test } from './_helpers/test';
 
 const CHAIN = '#sec-guitar [data-testid^="signal-node-"]';
 const PAIR = '#sec-guitar .guitar-pair > *';

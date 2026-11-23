@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { PHONE_RANGE_WIDTHS } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { openShell, SHELL_SELECTOR } from './_helpers/shell';
+import { expect, test } from './_helpers/test';
 
 const VIEWPORT_HEIGHT = 812;
 const AXIS_TOLERANCE_PX = 1;

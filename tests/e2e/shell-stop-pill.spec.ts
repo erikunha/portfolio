@@ -1,10 +1,10 @@
-import { expect, type Page, test } from '@playwright/test';
 import { shellUi } from '../../content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { settleFrames, WIDTH } from './_helpers/geometry';
 import { installChunkedAsk } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR, stopButton } from './_helpers/shell';
+import { expect, type Page, test } from './_helpers/test';
 
 const CASES = [
   { width: WIDTH.PHONE_NARROW, height: 844, locale: SITE_LOCALE.en, motionOff: true },

@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { waitForHydration } from './_helpers/hydration';
+import { expect, test } from './_helpers/test';
 
 const SHELL_CHROME = '.shell-chrome';
 const SHELL_FORM = '[data-testid="shell-form"]';

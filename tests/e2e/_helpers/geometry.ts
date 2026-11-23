@@ -1,5 +1,8 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { MOBILE_BREAKPOINT_PX } from '@/lib/breakpoint';
+
+const BOX_POLL_MS = 50;
+const BOX_TIMEOUT_MS = 5_000;
 
 const PHONE_LARGE_FROM_PX = 400;
 const PHONE_WIDE_PX = 480;
@@ -108,6 +111,27 @@ export function heightOf(page: Page, selector: string): Promise<number> {
     .locator(selector)
     .first()
     .evaluate((node) => node.getBoundingClientRect().height);
+}
+
+export type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
+
+export async function boxOf(
+  locator: Locator,
+  name: string,
+  timeout = BOX_TIMEOUT_MS,
+): Promise<Box> {
+  let box: Box | null = null;
+  await expect
+    .poll(
+      async () => {
+        box = await locator.boundingBox();
+        return box !== null;
+      },
+      { message: `${name} must have a layout box`, intervals: [BOX_POLL_MS], timeout },
+    )
+    .toBe(true);
+  if (box === null) throw new Error(`${name} has no layout box`);
+  return box;
 }
 
 const DEFAULT_SETTLE_FRAMES = 2;

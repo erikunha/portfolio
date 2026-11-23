@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { scrollThroughPage, translucentSurfaces } from './_helpers/surfaces';
+import { expect, type Page, test } from './_helpers/test';
 
 const SECTION_IDS = [
   'bio',

@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { FULL_SWEEP_WIDTHS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const ROUTES = ['/links', '/links/en'] as const;
 const LEFT_EDGE_TOLERANCE_PX = 1;

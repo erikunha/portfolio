@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { CORE_WIDTHS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const VIEWPORT_HEIGHT = 844;
 const SECTION_SELECTOR = 'main > section[id^="sec-"]';

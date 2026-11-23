@@ -1,10 +1,10 @@
-import { expect, type Page, test } from '@playwright/test';
 import { serverErrorCore } from '@/content/server-error-core';
 import { SITE_HTML_LANG, SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 import { CRASH_SURFACE, type CrashSurface, crashOnce } from './_helpers/injected-crash';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Page, test } from './_helpers/test';
 
 const HOME_PATHS: Record<SiteLocale, string> = { en: '/', pt: '/pt' };
 const SURFACES: readonly CrashSurface[] = Object.values(CRASH_SURFACE);

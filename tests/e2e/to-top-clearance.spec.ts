@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
-import { VIEWPORTS } from './_helpers/geometry';
+import { boxOf, VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
+import { expect, test } from './_helpers/test';
 
 const PHONES = [VIEWPORTS.PHONE_NARROW, VIEWPORTS.PHONE] as const;
 const PATHS = ['/', '/pt'] as const;
@@ -72,9 +72,9 @@ test.describe('the back-to-top button is a full touch target', () => {
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       const button = page.locator('.to-top-btn');
       await expect(button).toBeVisible();
-      const box = await button.boundingBox();
+      const box = await boxOf(button, 'the back-to-top button');
       expect(
-        Math.min(box?.width ?? 0, box?.height ?? 0),
+        Math.min(box.width, box.height),
         'the back-to-top button must be a 44px touch target, not the 40px it was',
       ).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET_PX);
     });

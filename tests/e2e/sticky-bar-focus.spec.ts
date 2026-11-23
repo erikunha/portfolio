@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { gotoHydrated, MOBILE_BAR_CONTROL, STATUS_BAR } from './_helpers/hydration';
+import { expect, test } from './_helpers/test';
 
 const PHONE = VIEWPORTS.PHONE;
 const READING_OFFSET_PX = 3000;

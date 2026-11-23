@@ -1,9 +1,9 @@
-import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
+import { boxOf, VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { revealDeferredContent } from '../../../tests/e2e/_helpers/snapshot';
+import { expect, type Page, test } from '../../../tests/e2e/_helpers/test';
 
 const PHONE = VIEWPORTS.PHONE;
 const DESKTOP = { width: WIDTH.DESKTOP, height: 900 };
@@ -259,13 +259,15 @@ test.describe('ContactSection', () => {
       const you = page.getByTestId('ctz-clock-you');
       await expect(erik).toBeVisible({ timeout: ISLAND_LOAD_TIMEOUT_MS });
       await expect(you).toBeVisible({ timeout: ISLAND_LOAD_TIMEOUT_MS });
-      const [erikBox, youBox] = await Promise.all([erik.boundingBox(), you.boundingBox()]);
+      const [erikBox, youBox] = await Promise.all([
+        boxOf(erik, 'the Erik clock'),
+        boxOf(you, 'the visitor clock'),
+      ]);
 
-      expect(
-        Math.abs((erikBox?.y ?? 0) - (youBox?.y ?? 0)),
-        'both clocks share a row',
-      ).toBeLessThanOrEqual(SAME_LINE_PX);
-      expect((youBox?.x ?? 0) > (erikBox?.x ?? 0) + (erikBox?.width ?? 0)).toBe(true);
+      expect(Math.abs(erikBox.y - youBox.y), 'both clocks share a row').toBeLessThanOrEqual(
+        SAME_LINE_PX,
+      );
+      expect(youBox.x > erikBox.x + erikBox.width).toBe(true);
     });
   }
 

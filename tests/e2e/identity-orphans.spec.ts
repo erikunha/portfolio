@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { lastLineOrphansIn } from './_helpers/line-words';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const KEEP_TAIL_MAX_CHARS = 8;
 const VIEWPORTS = [

@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { expectStableFor } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
+import { expect, test } from './_helpers/test';
 
 const HYDRATION_DELAY_MS = 2000;
 const SHELL_FORM_SELECTOR = '[data-testid="shell-form"]';

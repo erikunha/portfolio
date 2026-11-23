@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
-import { WIDTH } from './_helpers/geometry';
+import { boxOf, WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Page, test } from './_helpers/test';
 import { scrollByInput } from './_helpers/to-top';
 
 const PHONE = { width: WIDTH.PHONE_COMPACT, height: 812 } as const;
@@ -41,8 +41,8 @@ test.describe('the back-to-top tab shows only on a scroll up', { tag: '@cross-br
     await scrollByInput(page, -WHEEL_UP_PX);
     await expect(tab).toHaveClass(/to-top-show/);
     await expect(tab).not.toHaveAttribute('inert', '');
-    const box = await tab.boundingBox();
-    expect(Math.min(box?.width ?? 0, box?.height ?? 0)).toBeGreaterThanOrEqual(44);
+    const box = await boxOf(tab, 'the back-to-top tab');
+    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
 
     await tab.click();
     await expect

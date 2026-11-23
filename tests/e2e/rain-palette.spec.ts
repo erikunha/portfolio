@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const RAIN_CANVAS = 'canvas[style*="position: fixed"]';
 const RAIN_TOKENS = ['--color-rain-head', '--color-rain-body', '--rain-tail-alpha'];

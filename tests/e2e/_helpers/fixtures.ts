@@ -1,6 +1,6 @@
-import { test as base, expect, type Page } from '@playwright/test';
 import { installMockBackend } from './mock-backend';
 import { freezeMotion } from './motion';
+import { test as base, expect, type Page } from './test';
 
 export { expect };
 

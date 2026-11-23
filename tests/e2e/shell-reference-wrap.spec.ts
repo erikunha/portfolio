@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test';
 import { CORE_COMPACT_WIDTHS } from './_helpers/geometry';
 import { installChunkedAsk } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR } from './_helpers/shell';
+import { expect, test } from './_helpers/test';
 
 const VIEWPORT_HEIGHT = 844;
 const QUESTION = 'who is erik?';

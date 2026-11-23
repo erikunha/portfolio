@@ -4,6 +4,7 @@ const CROSS_BROWSER_GREP = /@cross-browser(?![\w-])/;
 const CROSS_BROWSER_AND_VISUAL_GREP = /@cross-browser(?![\w-])|@mobile-visual(?![\w-])/;
 
 const DEFAULT_BASE_URL = 'http://localhost:3000';
+const STALL_RECOVERY_REPORTER = './tests/e2e/_helpers/stall-recovery-reporter.ts';
 const REGEX_SPECIAL_CHARACTERS = /[.*+?^${}()|[\]\\]/g;
 const NESTED_WORKTREE_DIRECTORIES = String.raw`\.(?:claude/)?worktrees/`;
 
@@ -77,6 +78,7 @@ export default defineConfig({
   workers: process.env.CI ? 2 : 1,
   reporter: [
     ...(process.env.GITHUB_ACTIONS ? ([['github'], ['list']] as const) : ([['list']] as const)),
+    [STALL_RECOVERY_REPORTER],
     ...(process.env.ARGOS_TOKEN
       ? [['@argos-ci/playwright/reporter', { ignoreUploadFailures: true }] as [string, object]]
       : []),

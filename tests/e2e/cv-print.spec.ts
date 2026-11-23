@@ -1,5 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
+import { expect, type Page, test } from './_helpers/test';
 
 const A4_PX = VIEWPORTS.A4_PRINT;
 const PATHS = ['/cv', '/pt/cv'] as const;

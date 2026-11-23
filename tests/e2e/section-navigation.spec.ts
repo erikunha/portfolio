@@ -1,10 +1,10 @@
-import { expect, test } from '@playwright/test';
 import { brandByLocale } from '@/content/brand';
 import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { WIDTH } from './_helpers/geometry';
 import { DOCK_MENU, gotoHydrated, MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const SCROLL_PROBE_PX = 400;
 const TOPBAR_WIDTHS = [WIDTH.TABLET, WIDTH.LAPTOP, WIDTH.DESKTOP, WIDTH.DESKTOP_WIDE];

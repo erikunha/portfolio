@@ -1,11 +1,11 @@
-import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { WIDTH } from './_helpers/geometry';
+import { boxOf, WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { revealDeferredContent } from './_helpers/snapshot';
+import { expect, type Page, test } from './_helpers/test';
 
 const PHONE = { width: WIDTH.PHONE, height: 844 };
 const NARROW = { width: WIDTH.PHONE_NARROW, height: 700 };
@@ -321,11 +321,11 @@ test.describe('contact state boards', () => {
         const form = await openForm(page, locale);
         await fillValid(page);
         const button = form.getByRole('button', { name: copy.submit, exact: true });
-        const idleWidth = (await button.boundingBox())?.width ?? 0;
+        const idleWidth = (await boxOf(button, 'the idle submit button')).width;
         await button.click();
         await expect(form.getByTestId('contact-status')).toHaveText(copy.sending);
         const busy = form.getByRole('button', { name: copy.submitting, exact: true });
-        const busyWidth = (await busy.boundingBox())?.width ?? 0;
+        const busyWidth = (await boxOf(busy, 'the busy submit button')).width;
 
         expect(Math.abs(busyWidth - idleWidth)).toBeLessThan(SUBPIXEL_PX);
         await expect(page.locator(FIELD_SELECTORS.name)).toHaveJSProperty('readOnly', true);

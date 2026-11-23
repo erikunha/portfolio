@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { IMAGE_NOT_DECODED, waitForImagesDecoded } from './_helpers/images';
+import { expect, test } from './_helpers/test';
 
 const BROKEN_SOURCE = 'data:image/png;base64,bm90LWFuLWltYWdl';
 

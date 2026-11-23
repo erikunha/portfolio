@@ -1,7 +1,8 @@
-import { expect, test } from '@playwright/test';
 import { HIRE_ACCESSIBLE_NAME, HIRE_SHORT_LABEL } from '@/content/nav';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { VIEWPORTS } from '../../../tests/e2e/_helpers/geometry';
+import { boxOf, VIEWPORTS } from '../../../tests/e2e/_helpers/geometry';
+import { gotoSettled } from '../../../tests/e2e/_helpers/streamed';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 test.use({ viewport: VIEWPORTS.DESKTOP });
 
@@ -69,7 +70,7 @@ test.describe('DesktopTopbar: navigation', () => {
   test('the language switch sits right after HIRE and links to the Portuguese home', async ({
     page,
   }) => {
-    await page.goto('/');
+    await gotoSettled(page, '/');
     const topbar = page.locator('.desktop-topbar');
     const hire = topbar
       .getByRole('navigation', { name: 'Site navigation' })
@@ -82,8 +83,8 @@ test.describe('DesktopTopbar: navigation', () => {
     );
     await expect(langSwitch.getByRole('link', { name: /^PT/ })).toHaveAttribute('href', '/pt');
 
-    const hireBox = await hire.boundingBox();
-    const switchBox = await langSwitch.boundingBox();
-    expect(switchBox?.x ?? 0).toBeGreaterThanOrEqual(hireBox?.x ?? Number.POSITIVE_INFINITY);
+    const hireBox = await boxOf(hire, 'the HIRE link');
+    const switchBox = await boxOf(langSwitch, 'the language switch');
+    expect(switchBox.x).toBeGreaterThanOrEqual(hireBox.x);
   });
 });

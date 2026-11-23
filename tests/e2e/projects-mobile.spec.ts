@@ -1,5 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
+import { expect, type Page, test } from './_helpers/test';
 
 const { PHONE: MOBILE, DESKTOP, PHONE_NARROW: PHONE_MIN } = VIEWPORTS;
 const FACT_ROW = '#sec-projects .project-stats > div';

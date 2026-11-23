@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { installMockBackend } from '../../../tests/e2e/_helpers/mock-backend';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 const FORM_SELECTOR = '[data-testid="contact-form"]';
 const SEND_SELECTOR = `${FORM_SELECTOR} .contact-send`;

@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
-import { VIEWPORTS } from './_helpers/geometry';
+import { boxOf, VIEWPORTS } from './_helpers/geometry';
 import { MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const DRAWER = '#section-drawer';
 const OPEN_MENU_TRIGGER = `${MENU_TRIGGER}:visible`;
@@ -197,9 +197,8 @@ for (const { name, viewport } of [
       page,
     }) => {
       await waitForPanelAtRest(page);
-      const drawerBox = await page.locator(DRAWER).boundingBox();
-      expect(drawerBox).not.toBeNull();
-      const x = (drawerBox?.x ?? 0) + (drawerBox?.width ?? 0) + BACKDROP_X_OFFSET_PX;
+      const drawerBox = await boxOf(page.locator(DRAWER), 'the drawer');
+      const x = drawerBox.x + drawerBox.width + BACKDROP_X_OFFSET_PX;
       await page.mouse.click(x, BACKDROP_Y_PX);
       await expect(page.locator(DRAWER)).not.toHaveClass(/is-open/);
       await expect(page.locator(DRAWER)).toBeHidden();

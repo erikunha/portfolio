@@ -1,9 +1,9 @@
-import { expect, type Page, test } from '@playwright/test';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { freezeMotion, MOTION_CHOICE, MOTION_STORAGE_KEY } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const LANGUAGE_NAV_NAME = /^(Idioma|Language)$/;
 const LANGUAGE_LINK_COUNT = 2;

@@ -1,9 +1,9 @@
-import { expect, test } from '@playwright/test';
 import { heroClientContent } from '../../content/hero-client';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const DESKTOP = { width: WIDTH.DESKTOP, height: 800 };
 const NARROW = { width: WIDTH.PHONE_NARROW, height: 720 };

@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
 import { CORE_WIDTHS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const BODY_RGB = 'rgb(230, 255, 230)';
 const TEXT_BASE_PX = 16;

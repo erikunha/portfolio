@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { stripVolatileChrome } from './_helpers/mask-volatile';
 import { snapshotLocator } from './_helpers/snapshot';
+import { expect, test } from './_helpers/test';
 
 test.describe('design-system components (visual baselines)', () => {
   test.beforeEach(async ({ request }) => {

@@ -1,10 +1,10 @@
-import { expect, test } from '@playwright/test';
 import { linksContent } from '@/content/links';
 import { LINKS_PATH } from '@/content/links.constants';
 import type { SiteLocale } from '@/content/site-locale';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
+import { expect, test } from './_helpers/test';
 
 const LOCALES: readonly SiteLocale[] = ['pt', 'en'];
 const COPY_LINK_BUTTON = 'button.links-line';

@@ -1,4 +1,3 @@
-import { expect, test } from '@playwright/test';
 import { linksContent } from '../../content/links';
 import {
   expectOneContactPost,
@@ -7,6 +6,7 @@ import {
   trackContactPosts,
 } from './_helpers/contact-journey';
 import { installMockBackend } from './_helpers/mock-backend';
+import { expect, test } from './_helpers/test';
 
 for (const state of ['queued', 'happy'] as const) {
   test(`contact delivery: ${state}`, { tag: '@cross-browser' }, async ({ page }) => {

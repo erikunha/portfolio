@@ -1,4 +1,3 @@
-import { expect, type Page, test } from '@playwright/test';
 import {
   CRASH_SURFACE,
   type CrashSurface,
@@ -6,6 +5,7 @@ import {
 } from '../../tests/e2e/_helpers/injected-crash';
 import { installMockBackend } from '../../tests/e2e/_helpers/mock-backend';
 import { freezeMotion } from '../../tests/e2e/_helpers/motion';
+import { expect, type Page, test } from '../../tests/e2e/_helpers/test';
 
 const HOME_ACTION = '.err-actions .btn[data-variant="secondary"]';
 const ACCENT_PROBE = 'var(--color-accent)';

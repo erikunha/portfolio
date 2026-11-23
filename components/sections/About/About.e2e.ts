@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { aboutContent } from '@/content/about';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { WIDTH } from '../../../tests/e2e/_helpers/geometry';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 const DESKTOP = { width: WIDTH.DESKTOP, height: 900 };
 

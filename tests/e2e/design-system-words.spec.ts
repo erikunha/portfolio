@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { DS_NAV_GROUPS } from '@/app/(en)/design-system/_components/ds-nav';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 import { renderEverything, splitWords, WORD_VIEWPORTS } from './_helpers/words';
 
 const ROUTES = DS_NAV_GROUPS.flatMap((group) => group.links.map((link) => link.href));

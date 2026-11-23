@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { DS_ROUTES } from '@/app/(en)/design-system/_components/ds-nav';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 import { renderEverything } from './_helpers/words';
 
 const PAGE_ROUTES = ['/', '/pt', '/links', '/links/en', '/cv', '/pt/cv', '/summary', '/pt/summary'];

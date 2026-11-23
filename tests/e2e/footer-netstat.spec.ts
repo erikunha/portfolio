@@ -1,5 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
 import { CORE_WIDTHS, WIDTH } from './_helpers/geometry';
+import { expect, type Page, test } from './_helpers/test';
 
 const FINE_ROW_MAX_PX = 30;
 const TOUCH_ROW_MIN_PX = 44;

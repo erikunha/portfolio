@@ -1,7 +1,7 @@
-import { type Browser, type BrowserContext, expect, type Page, test } from '@playwright/test';
 import { expectStableFor, heightOf, settleFrames, WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { drainRoutes } from './_helpers/routes';
+import { type Browser, type BrowserContext, expect, type Page, test } from './_helpers/test';
 
 const WIDTHS = [
   WIDTH.PHONE_NARROW,

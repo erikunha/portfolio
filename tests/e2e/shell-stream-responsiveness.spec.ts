@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { settleFrames } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { askShell, openShell, SHELL_SELECTOR, shellCopy, stopButton } from './_helpers/shell';
+import { expect, type Page, test } from './_helpers/test';
 
 // The bound. Two readings are held to it, and both come from numbers the repo
 // and the web platform already state:

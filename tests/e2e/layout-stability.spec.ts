@@ -1,13 +1,7 @@
-import {
-  type Browser,
-  type BrowserContextOptions,
-  expect,
-  type Page,
-  test,
-} from '@playwright/test';
 import { heightOf, settleFrames, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
+import { type Browser, type BrowserContextOptions, expect, type Page, test } from './_helpers/test';
 
 const { PHONE, TABLET, DESKTOP } = VIEWPORTS;
 const SUBPIXEL_PX = 1;

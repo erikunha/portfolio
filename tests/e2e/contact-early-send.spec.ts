@@ -1,4 +1,3 @@
-import { expect, test } from '@playwright/test';
 import {
   CONTACT_FORM_SELECTOR,
   clickSend,
@@ -12,6 +11,7 @@ import {
 import { installMockBackend } from './_helpers/mock-backend';
 import { installCommitOracle, isNodeCommitted } from './_helpers/react-commit-oracle';
 import { drainRoutes } from './_helpers/routes';
+import { expect, test } from './_helpers/test';
 
 const SENT_AFTER_COMMIT_TIMEOUT_MS = 15_000;
 const DELIVERED_TITLE = '✓ message delivered';

@@ -1,8 +1,8 @@
-import { expect, type Page, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { stripVolatileChrome } from './_helpers/mask-volatile';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Page, test } from './_helpers/test';
 
 const INPUT = '[aria-label="shell command"]';
 const SHELL_FORM = '[data-testid="shell-form"]';

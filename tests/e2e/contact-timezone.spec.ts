@@ -1,5 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
 import { horizontalOverflow as pageOverflowOf, WIDTH } from './_helpers/geometry';
+import { expect, type Page, test } from './_helpers/test';
 
 const FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 const VIEWPORTS = [

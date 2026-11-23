@@ -1,11 +1,17 @@
-import { expect, test } from '@playwright/test';
 import { brandByLocale } from '@/content/brand';
 import { LINKS_PATH } from '@/content/links.constants';
 import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { horizontalOverflow, PHONE_PAIR_WIDTHS, VIEWPORTS, WIDTH } from './_helpers/geometry';
+import {
+  boxOf,
+  horizontalOverflow,
+  PHONE_PAIR_WIDTHS,
+  VIEWPORTS,
+  WIDTH,
+} from './_helpers/geometry';
 import { gotoHydrated, MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const SHELL_PATHS: readonly { path: string; locale: SiteLocale }[] = [
   { path: '/', locale: SITE_LOCALE.en },
@@ -50,11 +56,14 @@ test.describe('one shell on every page', () => {
       await expect(topbar.locator('.window-chrome, [class*="window-chrome"]')).toHaveCount(0);
       const menu = topbar.getByRole('button', { name: menuName });
       await expect(menu).toBeVisible();
-      const [iconBox, menuBox] = await Promise.all([homeLink.boundingBox(), menu.boundingBox()]);
+      const [iconBox, menuBox] = await Promise.all([
+        boxOf(homeLink, 'the brand icon'),
+        boxOf(menu, 'the menu trigger'),
+      ]);
       expect(
-        iconBox?.x ?? Number.NEGATIVE_INFINITY,
+        iconBox.x,
         'the brand icon sits right of the menu trigger, at the far end of the bar',
-      ).toBeGreaterThan(menuBox?.x ?? 0);
+      ).toBeGreaterThan(menuBox.x);
       await expect(
         topbar.getByRole('link', { name: chrome.topbarHire.accessibleName }),
       ).toBeVisible();
