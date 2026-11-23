@@ -36,7 +36,8 @@ describe('About r106 composition', () => {
     render(<About locale={SITE_LOCALE.en} />);
     expect(screen.getAllByRole('status').map((n) => n.textContent)).toContain('Senior');
     expect(screen.getByText(/LCP, INP, CLS and bundle size/)).toBeTruthy();
-    expect(screen.getByText(/WCAG 2.2 AA, WAI-ARIA/)).toBeTruthy();
+    expect(screen.getByText(/Evals before shipping/)).toBeTruthy();
+    expect(screen.queryByText(/WCAG 2.2 AA, WAI-ARIA/)).toBeNull();
     const responsibilities = screen
       .getByRole('heading', { name: 'LS -LA ~/RESPONSIBILITIES' })
       .closest('.panel');

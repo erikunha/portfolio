@@ -116,19 +116,16 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
     whoami: {
       title: '# Whoami',
       intro: pt
-        ? 'Mais de 8 anos de software em produção em SaaS AI-native, fintech, pagamentos e e-commerce: sistemas com LLMs e a avaliação que decide se é seguro colocá-los em produção, originação de negócios em mercados privados, pagamentos PCI-DSS, manutenção de equipamentos e seguros bancários.'
-        : '8+ years of production software across AI-native SaaS, fintech, payments and e-commerce: LLM systems and the evaluation that decides whether they are safe to ship, private-markets deal origination, PCI-DSS payments, equipment maintenance and bank insurance.',
+        ? 'Mais de 8 anos de software em produção em SaaS AI-native, fintech e e-commerce, com foco em sistemas com LLMs e nas avaliações que decidem se eles vão para produção.'
+        : '8+ years of production software across AI-native SaaS, fintech and e-commerce, focused on LLM systems and the evals that decide whether they ship.',
       principlesTitle: pt ? '## Princípios de operação' : '## Operating Principles',
       principles: [
         pt
-          ? '- Performance em primeiro lugar: LCP, INP, CLS e tamanho de bundle em orçamentos de produção.'
-          : '- Performance-first: LCP, INP, CLS and bundle size in production budgets.',
-        pt
-          ? '- A11y e conformidade: WCAG 2.2 AA, WAI-ARIA, salvaguardas de nível PCI-DSS.'
-          : '- A11y & compliance: WCAG 2.2 AA, WAI-ARIA, PCI-DSS-grade safeguards.',
-        pt
           ? '- Avaliar antes de lançar: juiz LLM calibrado contra rótulos humanos, resistência a jailbreak travada em CI.'
           : '- Evals before shipping: an LLM judge calibrated against human labels, jailbreak resistance gated in CI.',
+        pt
+          ? '- Performance em primeiro lugar: LCP, INP, CLS e tamanho de bundle em orçamentos de produção.'
+          : '- Performance-first: LCP, INP, CLS and bundle size in production budgets.',
       ],
       statusTitle: pt ? '## Status atual' : '## Current Status',
       statusPrefix: pt ? 'Aberto a vagas de nível ' : 'Open to ',
@@ -141,14 +138,8 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
           ? `- Vagas: ${OPEN_ROLES_SENTENCE[SITE_LOCALE.pt]}`
           : `- Roles: ${OPEN_ROLES_SENTENCE[SITE_LOCALE.en]}`,
         pt
-          ? '- Trilha: contribuidor individual, tech lead ou engenheiro fundador'
-          : '- Track: individual contributor, tech lead or founding engineer',
-        pt
-          ? '- Contratação: tempo integral ou contrato de prazo fixo'
-          : '- Engagement: full-time or fixed-term contract',
-        pt
-          ? '- Domínios: produtos AI-native, GenAI e agentes, avaliação de LLMs, plataformas de produto densas em dados, pagamentos, saúde e EdTech'
-          : '- Domains: AI-native products, GenAI and agents, LLM evaluation, data-dense product platforms, payments, healthcare and EdTech',
+          ? '- Domínios: produtos AI-native, agentes e avaliação de LLMs'
+          : '- Domains: AI-native products, agents and LLM evaluation',
       ],
       gutterLines: 64,
     },

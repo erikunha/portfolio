@@ -116,7 +116,7 @@ describe('derived strings render exactly what they rendered before', () => {
     expect(profileLocation).toBe('Brazil · UTC-3 · available now');
     expect(profilePageTitle).toBe('Erik Cunha · Senior Software Engineer, AI Engineer');
     expect(profileMetaDescription).toBe(
-      'Senior Software Engineer, AI Engineer. Brazil · UTC-3 · available now. TypeScript, Python, React, Next.js, Angular, Node.js, AWS.',
+      'Senior Software Engineer, AI Engineer. LLM Systems, Evals, Agents, MCP, Guardrails. Brazil · UTC-3 · available now. TypeScript, Python, React, Next.js.',
     );
     expect(profileLanguageLine).toBe('PT-BR native · EN C1 · ES B1 · FR A2');
     expect(profileWorkingLanguageLine).toBe('PT-BR native · EN C1');
