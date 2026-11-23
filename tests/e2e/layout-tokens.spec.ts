@@ -3,7 +3,7 @@ import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 
 const GUTTER_AT_390 = 16;
-const GUTTER_AT_1280 = 24;
+const GUTTER_AT_1280 = 32;
 const MEASURE_PAGE = 1200;
 const PAGE_TOP_PHONE = 32;
 const SPACE_SECTION_PHONE = 32;
