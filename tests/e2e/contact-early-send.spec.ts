@@ -13,7 +13,6 @@ import { installMockBackend } from './_helpers/mock-backend';
 import { installCommitOracle, isNodeCommitted } from './_helpers/react-commit-oracle';
 import { drainRoutes } from './_helpers/routes';
 
-const FORM_CHUNK_HOLD_MS = 5_000;
 const SENT_AFTER_COMMIT_TIMEOUT_MS = 15_000;
 const DELIVERED_TITLE = '✓ message delivered';
 const SUCCESS_TEST_ID = 'contact-success';
@@ -25,7 +24,8 @@ test.describe('a send click before the contact form commits is not lost', () => 
     tag: '@cross-browser',
   }, async ({ page }) => {
     await installCommitOracle(page);
-    const heldChunks = await holdContactFormChunk(page, FORM_CHUNK_HOLD_MS);
+    const formChunk = Promise.withResolvers<void>();
+    const heldChunks = await holdContactFormChunk(page, formChunk.promise);
     let sent: Record<string, string> | null = null;
     page.on('request', (request) => {
       if (request.url().endsWith('/api/contact') && request.method() === 'POST') {
@@ -34,16 +34,20 @@ test.describe('a send click before the contact form commits is not lost', () => 
     });
     const posts = trackContactPosts(page);
     await installMockBackend(page, { contact: 'happy', log: 'accept' });
-    await page.goto('/');
+    try {
+      await page.goto('/');
 
-    const form = await openContactFromMenu(page);
-    await expect(form).toBeVisible();
-    await fillVisitorMessage(form);
-    expect(
-      await isNodeCommitted(page, CONTACT_FORM_SELECTOR),
-      'the hold ended before the click: the form was already committed, so this run proves nothing',
-    ).toBe(false);
-    await clickSend(form);
+      const form = await openContactFromMenu(page);
+      await expect(form).toBeVisible();
+      await fillVisitorMessage(form);
+      expect(
+        await isNodeCommitted(page, CONTACT_FORM_SELECTOR),
+        'the form committed before its chunk was released, so this run proves nothing',
+      ).toBe(false);
+      await clickSend(form);
+    } finally {
+      formChunk.resolve();
+    }
 
     await expectOneContactPost(posts, SENT_AFTER_COMMIT_TIMEOUT_MS);
     await expect(page.getByTestId(SUCCESS_TEST_ID)).toContainText(DELIVERED_TITLE, {
