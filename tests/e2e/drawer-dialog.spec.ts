@@ -1,12 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
-import {
-  analyseSlide,
-  MIN_EXIT_TRAVEL,
-  MIN_LIVE_POSITIONS,
-  type Paint,
-} from './_helpers/slide-frames';
 import { gotoSettled } from './_helpers/streamed';
 
 const DRAWER = '#section-drawer';
@@ -19,12 +13,14 @@ const EXIT_SAMPLE_CAP_MS = EXIT_WINDOW_MULTIPLE * FIXED_EXIT_WINDOW_MS;
 const EXIT_TICK_MS = 8;
 const EXIT_POLL_MS = 50;
 const SLIDE_PROPERTY = 'transform';
-const SLIDE_PROGRESS = [0.1, 0.2, 0.3, 0.4, 0.5];
+const SLIDE_PROGRESS = [0.1, 0.25, 0.5, 0.75, 0.9];
 const MIN_SLIDE_DURATION_MS = 100;
 const MS_PER_SECOND = 1000;
 const MIN_EXIT_SHARE = 0.75;
+const MIN_EXIT_TRAVEL = 0.75;
 
 type ExitFrame = { x: number; open: boolean; seeked: boolean };
+type SlideEnd = { x: number; open: boolean };
 type ExitMark = {
   at: number;
   line: number;
@@ -34,15 +30,14 @@ type ExitMark = {
 };
 type ExitCapture = {
   frames: ExitFrame[];
+  slideEnd?: SlideEnd;
   marks: ExitMark[];
   durationMs: number;
   panelWidth: number;
-  paints: Paint[];
 };
 type SamplerWindow = Window & {
   exitCapture?: ExitCapture;
   exitDone?: boolean;
-  paintsDone?: boolean;
 };
 
 async function armExitSampler(page: Page, seek: boolean): Promise<void> {
@@ -56,11 +51,9 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
         marks: [],
         durationMs: 0,
         panelWidth: drawer.offsetWidth,
-        paints: [],
       };
       sampler.exitCapture = capture;
       sampler.exitDone = false;
-      sampler.paintsDone = false;
       document.addEventListener(
         'keydown',
         () => {
@@ -79,15 +72,6 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
             attributes: true,
             attributeFilter: ['open', 'data-exiting', 'class'],
           });
-          const paint = (at: number) => {
-            capture.paints.push({ at, x: readX(), open: drawer.open });
-            if (!drawer.open || at - start >= capMs) {
-              sampler.paintsDone = true;
-              return;
-            }
-            requestAnimationFrame(paint);
-          };
-          requestAnimationFrame(paint);
           let stepped = false;
           const timer = setInterval(() => {
             const slide = drawer
@@ -105,6 +89,8 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
                 slide.currentTime = duration * fraction;
                 capture.frames.push({ x: readX(), open: drawer.open, seeked: true });
               }
+              slide.currentTime = duration;
+              capture.slideEnd = { x: readX(), open: drawer.open };
               slide.currentTime = resumeAt;
               slide.play();
             }
@@ -144,12 +130,9 @@ async function sampleExit(page: Page, seek: boolean): Promise<ExitCapture> {
   await waitForPanelAtRest(page);
   await armExitSampler(page, seek);
   await page.keyboard.press('Escape');
-  await page.waitForFunction(
-    () =>
-      (window as SamplerWindow).exitDone === true && (window as SamplerWindow).paintsDone === true,
-    undefined,
-    { polling: EXIT_POLL_MS },
-  );
+  await page.waitForFunction(() => (window as SamplerWindow).exitDone === true, undefined, {
+    polling: EXIT_POLL_MS,
+  });
   return page.evaluate(
     () => (window as SamplerWindow).exitCapture ?? ({} as unknown as ExitCapture),
   );
@@ -223,11 +206,10 @@ for (const { name, viewport } of [
       await expect(page.locator(OPEN_MENU_TRIGGER).first()).toBeFocused();
     });
 
-    test('the panel slides out in real time and the dialog stays open through the slide @cross-browser', async ({
+    test('the dialog stays open for most of the exit transition on the clock @cross-browser', async ({
       page,
     }) => {
       await expect(page.locator('body')).not.toHaveAttribute('data-motion', 'reduce');
-      await waitForPanelAtRest(page);
       const capture = await sampleExit(page, false);
       const { startAt, closeAt, elapsedMs } = exitWindow(capture);
       expect(
@@ -242,21 +224,6 @@ for (const { name, viewport } of [
         elapsedMs,
         'the dialog stays open for at least three quarters of the transition duration on the clock that closed it',
       ).toBeGreaterThanOrEqual(capture.durationMs * MIN_EXIT_SHARE);
-      const slide = analyseSlide(capture.paints, capture.panelWidth);
-      test.info().annotations.push({
-        type: 'frames',
-        description: `rAF across the slide: max gap ${slide.maxGapMs.toFixed(1)} ms, live paints ${slide.livePaints}, live positions ${slide.positions}, travel ${slide.travel.toFixed(2)}, ${slide.steady ? 'asserted' : 'not asserted'}`,
-      });
-      if (slide.steady) {
-        expect(
-          slide.travel,
-          'rAF was steady across the slide, so the panel covers most of its travel while the dialog is still open',
-        ).toBeGreaterThanOrEqual(MIN_EXIT_TRAVEL);
-        expect(
-          slide.positions,
-          'rAF was steady across the slide, so the panel is drawn at more than one live position while the dialog is open',
-        ).toBeGreaterThanOrEqual(MIN_LIVE_POSITIONS);
-      }
       expect(capture.frames.at(-1)?.open, 'the dialog closes once the slide is over').toBe(false);
       await expect(page.locator(OPEN_MENU_TRIGGER).first()).toBeFocused();
     });
@@ -270,6 +237,14 @@ for (const { name, viewport } of [
         capture.durationMs,
         'the exit transition is long enough to be seen',
       ).toBeGreaterThanOrEqual(MIN_SLIDE_DURATION_MS);
+      const seekedFrames = capture.frames.filter(({ seeked }) => seeked);
+      expect(seekedFrames, 'one frame is read at every seeked progress').toHaveLength(
+        SLIDE_PROGRESS.length,
+      );
+      expect(
+        seekedFrames.every(({ open }) => open),
+        'the dialog is still open at every seeked progress',
+      ).toBe(true);
       const seeked = slideFrames(capture, true).map(({ x }) => x);
       expect(seeked, 'every seek lands inside the slide').toHaveLength(SLIDE_PROGRESS.length);
       expect(
@@ -278,6 +253,14 @@ for (const { name, viewport } of [
         ),
         'the seeked positions move toward the closed position',
       ).toBe(true);
+      expect(
+        -(seeked.at(-1) ?? 0) / capture.panelWidth,
+        'by the last seeked progress the panel has covered most of its travel while the dialog is still open',
+      ).toBeGreaterThanOrEqual(MIN_EXIT_TRAVEL);
+      expect(
+        capture.slideEnd,
+        'at the end of the transition the panel sits at the closed position',
+      ).toEqual({ x: -capture.panelWidth, open: true });
       expect(capture.frames.at(-1)?.open, 'the dialog closes once the slide is over').toBe(false);
       await expect(page.locator(OPEN_MENU_TRIGGER).first()).toBeFocused();
     });
