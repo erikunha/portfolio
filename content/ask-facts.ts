@@ -9,12 +9,10 @@ import { WORK_SCOPE_SENTENCE } from './work-scope';
 
 const mbaPeriod = education[SITE_LOCALE.en].find((entry) => entry.id === 'MBA_AI_ENG')?.period;
 
-const TRAILING_PERIOD_PATTERN = /\.$/;
 const EVENT_NAME_SEPARATOR = '_';
-const ORGANIZING_TEAM_SIZE = 'nine';
 
 const event = communityEvent[SITE_LOCALE.en];
-const [talksBullet = '', speakerCycleBullet = ''] = event.bullets;
+const [organizerBullet = ''] = event.bullets;
 const eventName = event.name
   .split(EVENT_NAME_SEPARATOR)
   .map((word) => `${word.charAt(0)}${word.slice(1).toLowerCase()}`)
@@ -208,7 +206,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
     'The 12-agent Betsson system has no measured before-and-after figure and no adoption headcount. He would set a baseline first and measure review time and defects, not usage.',
   ],
   community: [
-    `Organizer of ${eventName} ${event.year}, one of ${ORGANIZING_TEAM_SIZE} on the organizing team. Erik ${talksBullet.replace(TRAILING_PERIOD_PATTERN, '')} and ${speakerCycleBullet}`,
+    `Co-organizer of ${eventName} ${event.year}: ${organizerBullet.charAt(0).toLowerCase()}${organizerBullet.slice(1)}`,
     'Writing: two dev.to articles, "Creating Type-Safe Forms in Angular: Advanced Tip" (Aug 2023) and "What are Progressive Web Apps (PWAs)" (Oct 2021).',
   ],
   projectDetail: [

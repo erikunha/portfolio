@@ -27,6 +27,7 @@ const NON_ENTITY_WORDS = new Set([
   'Toward',
   'Yes',
   'Early',
+  'Finding',
   'Based',
   'Should',
   'June',

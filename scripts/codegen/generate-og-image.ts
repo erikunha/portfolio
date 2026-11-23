@@ -142,7 +142,7 @@ function buildHtml(): string {
     <div class="name">ERIK CUNHA</div>
     <div class="title">Senior Software Engineer, AI Engineer</div>
     <div class="subtitle">Agents &bull; MCP &bull; LLM-as-Judge &bull; Evals &bull; Guardrails</div>
-    <div class="subtitle" style="margin-top:4px;">Data-Dense Product Platforms &bull; Accessibility &bull; Web Performance</div>
+    <div class="subtitle" style="margin-top:4px;">Production LLM Systems &bull; Evals in CI &bull; AI-native Products</div>
   </div>
   <div class="stack">
     <span class="tag">React</span>
