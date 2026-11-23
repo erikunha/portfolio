@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  HEALTHY_COOP_SWAP_GAP_MAX_MS,
   isSameDocumentTarget,
   isWebKitCoopNavigationStall,
   NAVIGATION_STALL_WINDOW_MS,
@@ -57,6 +58,10 @@ describe('isWebKitCoopNavigationStall', () => {
     );
   });
 
+  it('leaves a page with an empty URL alone', () => {
+    expect(isWebKitCoopNavigationStall(observed({ pageUrl: '' }))).toBe(false);
+  });
+
   it('leaves a pending document request for another URL alone', () => {
     const documentRequest = { url: 'http://localhost:3000/pt', responded: false, failed: false };
     expect(isWebKitCoopNavigationStall(observed({ documentRequest }))).toBe(false);
@@ -74,6 +79,10 @@ describe('isSameDocumentTarget', () => {
     expect(isSameDocumentTarget('/links/en#sec-feed', DOCUMENT_URL)).toBe(true);
     expect(isSameDocumentTarget('https://localhost:3000/links/en', DOCUMENT_URL)).toBe(false);
     expect(isSameDocumentTarget('/links/en?lang=pt', DOCUMENT_URL)).toBe(false);
+  });
+
+  it('ignores the fragment of an absolute target too', () => {
+    expect(isSameDocumentTarget(`${DOCUMENT_URL}#sec-feed`, DOCUMENT_URL)).toBe(true);
   });
 
   it('refuses a request URL that does not parse', () => {
@@ -103,6 +112,8 @@ describe('navigateWithStallRecovery', () => {
       observe,
       recordRecovery,
       stallWindowMs: NAVIGATION_STALL_WINDOW_MS,
+      recoveryFirstByteMs: () => undefined,
+      targetUrl: TARGET,
     });
     await expect(result).resolves.toBe('first');
     expect(navigate).toHaveBeenCalledTimes(1);
@@ -118,6 +129,8 @@ describe('navigateWithStallRecovery', () => {
       observe: () => stalled,
       recordRecovery: vi.fn(),
       stallWindowMs: NAVIGATION_STALL_WINDOW_MS,
+      recoveryFirstByteMs: () => undefined,
+      targetUrl: TARGET,
     });
     await expect(result).rejects.toBe(failure);
     expect(navigate).toHaveBeenCalledTimes(1);
@@ -132,6 +145,8 @@ describe('navigateWithStallRecovery', () => {
       observe: () => stalled,
       recordRecovery,
       stallWindowMs: NAVIGATION_STALL_WINDOW_MS,
+      recoveryFirstByteMs: () => undefined,
+      targetUrl: TARGET,
     });
     await vi.advanceTimersByTimeAsync(NAVIGATION_STALL_WINDOW_MS - 1);
     expect(navigate).toHaveBeenCalledTimes(1);
@@ -153,6 +168,8 @@ describe('navigateWithStallRecovery', () => {
       observe: () => slowResponse,
       recordRecovery,
       stallWindowMs: NAVIGATION_STALL_WINDOW_MS,
+      recoveryFirstByteMs: () => undefined,
+      targetUrl: TARGET,
     });
     await vi.advanceTimersByTimeAsync(NAVIGATION_STALL_WINDOW_MS * 4);
     answer('slow but answered');
@@ -170,6 +187,8 @@ describe('navigateWithStallRecovery', () => {
       observe: () => stalled,
       recordRecovery: vi.fn(),
       stallWindowMs: NAVIGATION_STALL_WINDOW_MS,
+      recoveryFirstByteMs: () => undefined,
+      targetUrl: TARGET,
     });
     const settled = expect(result).rejects.toBe(failure);
     await vi.advanceTimersByTimeAsync(NAVIGATION_STALL_WINDOW_MS);
@@ -191,6 +210,8 @@ describe('navigateWithStallRecovery', () => {
         observe: () => stalled,
         recordRecovery: vi.fn(),
         stallWindowMs: NAVIGATION_STALL_WINDOW_MS,
+        recoveryFirstByteMs: () => undefined,
+        targetUrl: TARGET,
       });
       await vi.advanceTimersByTimeAsync(NAVIGATION_STALL_WINDOW_MS);
       await expect(result).resolves.toBe('second');
@@ -202,8 +223,53 @@ describe('navigateWithStallRecovery', () => {
     }
   });
 
-  it('outlasts the slowest healthy COOP process swap measured, the gap in which a healthy navigation looks stalled', () => {
-    const SLOWEST_HEALTHY_SWAP_GAP_MS = 4976;
-    expect(NAVIGATION_STALL_WINDOW_MS).toBeGreaterThan(SLOWEST_HEALTHY_SWAP_GAP_MS);
+  it('cancels the stall-window timer when the navigation settles first', async () => {
+    const result = navigateWithStallRecovery({
+      navigate: async () => 'first',
+      observe: () => stalled,
+      recordRecovery: vi.fn(),
+      stallWindowMs: NAVIGATION_STALL_WINDOW_MS,
+      recoveryFirstByteMs: () => undefined,
+      targetUrl: TARGET,
+    });
+    await expect(result).resolves.toBe('first');
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('fails a recovered navigation whose second document answers later than the window', async () => {
+    const navigate = vi.fn<() => Promise<string>>();
+    navigate.mockImplementationOnce(never).mockImplementationOnce(async () => 'second');
+    const result = navigateWithStallRecovery({
+      navigate,
+      observe: () => stalled,
+      recordRecovery: vi.fn(),
+      stallWindowMs: NAVIGATION_STALL_WINDOW_MS,
+      recoveryFirstByteMs: () => NAVIGATION_STALL_WINDOW_MS + 1,
+      targetUrl: TARGET,
+    });
+    const settled = expect(result).rejects.toThrow(/^slow first byte: .*\/links\/en/);
+    await vi.advanceTimersByTimeAsync(NAVIGATION_STALL_WINDOW_MS);
+    await settled;
+  });
+
+  it('accepts a recovered navigation whose second document answers inside the window', async () => {
+    const navigate = vi.fn<() => Promise<string>>();
+    navigate.mockImplementationOnce(never).mockImplementationOnce(async () => 'second');
+    const result = navigateWithStallRecovery({
+      navigate,
+      observe: () => stalled,
+      recordRecovery: vi.fn(),
+      stallWindowMs: NAVIGATION_STALL_WINDOW_MS,
+      recoveryFirstByteMs: () => NAVIGATION_STALL_WINDOW_MS,
+      targetUrl: TARGET,
+    });
+    await vi.advanceTimersByTimeAsync(NAVIGATION_STALL_WINDOW_MS);
+    await expect(result).resolves.toBe('second');
+  });
+});
+
+describe('the stall window, a source-constant bound', () => {
+  it('is set above the slowest healthy COOP process swap measured, the gap in which a healthy navigation looks stalled', () => {
+    expect(NAVIGATION_STALL_WINDOW_MS).toBeGreaterThan(HEALTHY_COOP_SWAP_GAP_MAX_MS);
   });
 });
