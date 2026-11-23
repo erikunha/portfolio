@@ -1,6 +1,12 @@
 import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
+import {
+  analyseSlide,
+  MIN_EXIT_TRAVEL,
+  MIN_LIVE_POSITIONS,
+  type Paint,
+} from './_helpers/slide-frames';
 import { gotoSettled } from './_helpers/streamed';
 
 const DRAWER = '#section-drawer';
@@ -14,15 +20,9 @@ const EXIT_TICK_MS = 8;
 const EXIT_POLL_MS = 50;
 const SLIDE_PROPERTY = 'transform';
 const SLIDE_PROGRESS = [0.1, 0.2, 0.3, 0.4, 0.5];
-const MIN_LIVE_POSITIONS = 4;
-const MIN_EXIT_TRAVEL = 0.75;
 const MIN_SLIDE_DURATION_MS = 100;
 const MS_PER_SECOND = 1000;
 const MIN_EXIT_SHARE = 0.75;
-const FRAME_MS = 17;
-const STEADY_FRAME_GAP_MS = 2 * FRAME_MS;
-const STEADY_MIN_TICKS = 8;
-const REST_SAMPLE_MS = 300;
 
 type ExitFrame = { x: number; open: boolean; seeked: boolean };
 type ExitMark = {
@@ -37,9 +37,13 @@ type ExitCapture = {
   marks: ExitMark[];
   durationMs: number;
   panelWidth: number;
+  paints: Paint[];
 };
-type RestFrames = { ticks: number; medianGapMs: number };
-type SamplerWindow = Window & { exitCapture?: ExitCapture; exitDone?: boolean };
+type SamplerWindow = Window & {
+  exitCapture?: ExitCapture;
+  exitDone?: boolean;
+  paintsDone?: boolean;
+};
 
 async function armExitSampler(page: Page, seek: boolean): Promise<void> {
   await page.evaluate(
@@ -52,9 +56,11 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
         marks: [],
         durationMs: 0,
         panelWidth: drawer.offsetWidth,
+        paints: [],
       };
       sampler.exitCapture = capture;
       sampler.exitDone = false;
+      sampler.paintsDone = false;
       document.addEventListener(
         'keydown',
         () => {
@@ -73,6 +79,15 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
             attributes: true,
             attributeFilter: ['open', 'data-exiting', 'class'],
           });
+          const paint = (at: number) => {
+            capture.paints.push({ at, x: readX(), open: drawer.open });
+            if (!drawer.open || at - start >= capMs) {
+              sampler.paintsDone = true;
+              return;
+            }
+            requestAnimationFrame(paint);
+          };
+          requestAnimationFrame(paint);
           let stepped = false;
           const timer = setInterval(() => {
             const slide = drawer
@@ -125,43 +140,16 @@ async function waitForPanelAtRest(page: Page): Promise<void> {
   );
 }
 
-async function measureRestFrames(page: Page): Promise<RestFrames> {
-  await waitForPanelAtRest(page);
-  return page.evaluate(
-    (sampleMs) =>
-      new Promise<RestFrames>((resolve) => {
-        const ticks: number[] = [];
-        let sampling = true;
-        const tick = (at: number) => {
-          if (!sampling) return;
-          ticks.push(at);
-          requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-        setTimeout(() => {
-          sampling = false;
-          const gaps = ticks.slice(1).map((time, index) => time - (ticks[index] ?? time));
-          const median =
-            [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)] ??
-            Number.POSITIVE_INFINITY;
-          resolve({ ticks: ticks.length, medianGapMs: median });
-        }, sampleMs);
-      }),
-    REST_SAMPLE_MS,
-  );
-}
-
-function framesAreSteady({ ticks, medianGapMs }: RestFrames): boolean {
-  return ticks >= STEADY_MIN_TICKS && medianGapMs <= STEADY_FRAME_GAP_MS;
-}
-
 async function sampleExit(page: Page, seek: boolean): Promise<ExitCapture> {
   await waitForPanelAtRest(page);
   await armExitSampler(page, seek);
   await page.keyboard.press('Escape');
-  await page.waitForFunction(() => (window as SamplerWindow).exitDone === true, undefined, {
-    polling: EXIT_POLL_MS,
-  });
+  await page.waitForFunction(
+    () =>
+      (window as SamplerWindow).exitDone === true && (window as SamplerWindow).paintsDone === true,
+    undefined,
+    { polling: EXIT_POLL_MS },
+  );
   return page.evaluate(
     () => (window as SamplerWindow).exitCapture ?? ({} as unknown as ExitCapture),
   );
@@ -171,13 +159,6 @@ function slideFrames({ frames, panelWidth }: ExitCapture, seeked = false): ExitF
   return frames.filter(
     ({ x, open, seeked: tagged }) => tagged === seeked && open && x < 0 && x > -panelWidth,
   );
-}
-
-function deepestOpenTravel({ frames, panelWidth }: ExitCapture): number {
-  const travels = frames
-    .filter(({ open, seeked }) => open && !seeked)
-    .map(({ x }) => -x / panelWidth);
-  return travels.length > 0 ? Math.max(...travels) : Number.NaN;
 }
 
 function exitWindow({ marks }: ExitCapture): {
@@ -246,7 +227,7 @@ for (const { name, viewport } of [
       page,
     }) => {
       await expect(page.locator('body')).not.toHaveAttribute('data-motion', 'reduce');
-      const rest = await measureRestFrames(page);
+      await waitForPanelAtRest(page);
       const capture = await sampleExit(page, false);
       const { startAt, closeAt, elapsedMs } = exitWindow(capture);
       expect(
@@ -261,21 +242,19 @@ for (const { name, viewport } of [
         elapsedMs,
         'the dialog stays open for at least three quarters of the transition duration on the clock that closed it',
       ).toBeGreaterThanOrEqual(capture.durationMs * MIN_EXIT_SHARE);
-      const steady = framesAreSteady(rest);
-      const travel = deepestOpenTravel(capture);
-      const positions = new Set(slideFrames(capture).map(({ x }) => Math.round(x))).size;
+      const slide = analyseSlide(capture.paints, capture.panelWidth);
       test.info().annotations.push({
         type: 'frames',
-        description: `rAF at rest: ${rest.ticks} ticks, median ${rest.medianGapMs} ms, live positions ${positions}, travel ${travel}, ${steady ? 'asserted' : 'not asserted'}`,
+        description: `rAF across the slide: max gap ${slide.maxGapMs.toFixed(1)} ms, live paints ${slide.livePaints}, live positions ${slide.positions}, travel ${slide.travel.toFixed(2)}, ${slide.steady ? 'asserted' : 'not asserted'}`,
       });
-      if (steady) {
+      if (slide.steady) {
         expect(
-          travel,
-          'rAF was steady at rest, so the panel covers most of its travel while the dialog is still open',
+          slide.travel,
+          'rAF was steady across the slide, so the panel covers most of its travel while the dialog is still open',
         ).toBeGreaterThanOrEqual(MIN_EXIT_TRAVEL);
         expect(
-          positions,
-          'rAF was steady at rest, so the panel is drawn at more than one live position while the dialog is open',
+          slide.positions,
+          'rAF was steady across the slide, so the panel is drawn at more than one live position while the dialog is open',
         ).toBeGreaterThanOrEqual(MIN_LIVE_POSITIONS);
       }
       expect(capture.frames.at(-1)?.open, 'the dialog closes once the slide is over').toBe(false);
