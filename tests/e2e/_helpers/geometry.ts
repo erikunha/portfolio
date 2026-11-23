@@ -1,5 +1,8 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { MOBILE_BREAKPOINT_PX } from '@/lib/breakpoint';
+
+const BOX_POLL_MS = 50;
+const BOX_TIMEOUT_MS = 5_000;
 
 const PHONE_LARGE_FROM_PX = 400;
 const PHONE_WIDE_PX = 480;
@@ -108,6 +111,33 @@ export function heightOf(page: Page, selector: string): Promise<number> {
     .locator(selector)
     .first()
     .evaluate((node) => node.getBoundingClientRect().height);
+}
+
+export type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
+
+/**
+ * Reads the layout box of a locator and waits for it to exist. A `null` box means the element is
+ * hidden or was detached between the lookup and the read (a streamed boundary swapping its
+ * fallback out), so the read polls and re-resolves the locator, then fails naming the element
+ * instead of letting a missing box pass as a coordinate of 0.
+ */
+export async function boxOf(
+  locator: Locator,
+  name: string,
+  timeout = BOX_TIMEOUT_MS,
+): Promise<Box> {
+  let box: Box | null = null;
+  await expect
+    .poll(
+      async () => {
+        box = await locator.boundingBox();
+        return box !== null;
+      },
+      { message: `${name} must have a layout box`, intervals: [BOX_POLL_MS], timeout },
+    )
+    .toBe(true);
+  if (box === null) throw new Error(`${name} has no layout box`);
+  return box;
 }
 
 const DEFAULT_SETTLE_FRAMES = 2;

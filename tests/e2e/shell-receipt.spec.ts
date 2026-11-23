@@ -1,6 +1,6 @@
 import { fillShellState, shellStates, shellUi } from '../../content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
-import { WIDTH } from './_helpers/geometry';
+import { boxOf, WIDTH } from './_helpers/geometry';
 import { FORGET_RETRY_AFTER_S, type ForgetMock, fulfillForget } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR, waitForConfirmArmed } from './_helpers/shell';
@@ -108,8 +108,8 @@ for (const { width, height, locale, motionOff } of CASES) {
       expect(fit.right).toBeLessThanOrEqual(SUBPIXEL_PX);
       expect(fit.left).toBeLessThanOrEqual(SUBPIXEL_PX);
       for (const name of [ui.copy, ui.forget]) {
-        const box = await named(page, name).boundingBox();
-        expect(box?.height ?? 0, `${name} is a 44px target`).toBeGreaterThanOrEqual(TARGET_PX);
+        const box = await boxOf(named(page, name), name);
+        expect(box.height, `${name} is a 44px target`).toBeGreaterThanOrEqual(TARGET_PX);
       }
     });
 
@@ -120,7 +120,7 @@ for (const { width, height, locale, motionOff } of CASES) {
       await openShell(page, PATHS[locale]);
       await answerTwice(page);
       const forget = named(page, ui.forget);
-      const widthBefore = (await forget.boundingBox())?.width ?? 0;
+      const widthBefore = (await boxOf(forget, 'the forget button')).width;
 
       await forget.click();
       await expect(receipt(page)).toContainText(ui.forgetConfirmTitle);
@@ -133,7 +133,7 @@ for (const { width, height, locale, motionOff } of CASES) {
       await expect(named(page, ui.forgetConfirm)).toBeVisible();
       await waitForConfirmArmed(page);
       const confirm = secondaryButton(page);
-      expect((await confirm.boundingBox())?.width ?? 0).toBeCloseTo(widthBefore, 0);
+      expect((await boxOf(confirm, 'the confirm button')).width).toBeCloseTo(widthBefore, 0);
       await confirm.click();
       await expect(page.locator(SHELL_SELECTOR.receiptMessage)).toHaveText(
         fillShellState(ui.forgetPendingMany, { count: '2' }),

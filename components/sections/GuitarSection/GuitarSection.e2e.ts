@@ -1,4 +1,4 @@
-import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
+import { boxOf, VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { freezeMotion, MOTION_CHOICE, seedMotionChoice } from '../../../tests/e2e/_helpers/motion';
 import { type BrowserContext, expect, test } from '../../../tests/e2e/_helpers/test';
 
@@ -78,7 +78,9 @@ test.describe('Guitar mixer loading state', () => {
         heights.reserved,
         1,
       );
-      expect((await box.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(heights.reserved - 1);
+      expect((await boxOf(box, 'the loading box')).height).toBeGreaterThanOrEqual(
+        heights.reserved - 1,
+      );
     });
   }
 });

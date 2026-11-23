@@ -1,6 +1,6 @@
 import { linksContent } from '../../content/links';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
-import { horizontalOverflow, VIEWPORTS, WIDTH } from './_helpers/geometry';
+import { boxOf, horizontalOverflow, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 import { expect, type Page, test } from './_helpers/test';
 
@@ -43,15 +43,13 @@ const LINES = '.links-line';
 async function top(page: Page, selector: string): Promise<number> {
   const target = page.locator(selector).first();
   await expect(target, `${selector} must be on the page`).toBeVisible();
-  const box = await target.boundingBox();
-  return box?.y ?? 0;
+  return (await boxOf(target, selector)).y;
 }
 
 async function width(page: Page, selector: string): Promise<number> {
   const target = page.locator(selector).first();
   await expect(target, `${selector} must be on the page`).toBeVisible();
-  const box = await target.boundingBox();
-  return box?.width ?? 0;
+  return (await boxOf(target, selector)).width;
 }
 
 async function columnCount(page: Page, selector: string): Promise<number> {
