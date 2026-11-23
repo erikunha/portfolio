@@ -1,4 +1,3 @@
-import { setTimeout as delay } from 'node:timers/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { holdChunk } from './chunk-gate';
 import { openSectionMenu, waitForHydration } from './hydration';
@@ -46,8 +45,11 @@ export async function sendVisitorMessage(form: Locator): Promise<void> {
   await clickSend(form);
 }
 
-export async function holdContactFormChunk(page: Page, holdMs: number): Promise<() => number> {
-  return holdChunk(page, FORM_CHUNK_MARKER, () => delay(holdMs));
+export async function holdContactFormChunk(
+  page: Page,
+  released: Promise<unknown>,
+): Promise<() => number> {
+  return holdChunk(page, FORM_CHUNK_MARKER, () => released);
 }
 
 export function trackContactPosts(page: Page): () => number {

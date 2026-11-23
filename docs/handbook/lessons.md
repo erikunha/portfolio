@@ -234,9 +234,9 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     opener only. `sendVisitorMessage` (`tests/e2e/_helpers/contact-journey.ts`) waits for the form
     with `waitForHydration` before it fills and clicks, so a journey step acts once on a committed
     form (lesson 31). The product replays a send click made in that window (the form's React
-    `action` reads `FormData`; `tests/e2e/contact-early-send.spec.ts` holds the chunk for 5 s,
-    asserts the form is visible and uncommitted, clicks once and expects one POST and the success
-    state), so the wait is for determinism, not for correctness. The natural cause of the one
+    `action` reads `FormData`; `tests/e2e/contact-early-send.spec.ts` holds the chunk until the
+    test releases it after the click, asserts the form is visible and uncommitted, clicks once and
+    expects one POST and the success state; a fixed timer ran out on a slow runner), so the wait is for determinism, not for correctness. The natural cause of the one
     reported delivery failure is unconfirmed: only the held chunk ever reproduced it, and a
     stalled `/api/contact` mock or POST looks the same (no success). The delivery spec counts
     POSTs and asserts exactly one before it reads the success state, so the next natural failure
