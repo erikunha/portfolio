@@ -1,5 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
+import { expect, type Page, test } from './_helpers/test';
 
 const MAX_HERO_CLS = 0.01;
 const BOOT_LINE_COUNT = 11;

@@ -1,8 +1,8 @@
-import { expect, type Locator, type Page, test } from '@playwright/test';
 import { focusByKeyboard } from './_helpers/focus-ring-targets';
 import { WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Locator, type Page, test } from './_helpers/test';
 
 interface HeaderControl {
   name: string;

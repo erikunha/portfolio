@@ -1,5 +1,4 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, type Locator, type Page, test } from '@playwright/test';
 import { FOCUS_RING_TARGETS, focusByKeyboard } from './_helpers/focus-ring-targets';
 import {
   BOLD_WEIGHT,
@@ -29,6 +28,7 @@ import {
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated, MENU_TRIGGER } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
+import { expect, type Locator, type Page, test } from './_helpers/test';
 
 const FORCED_QUERY = '(forced-colors: active)';
 const NO_OUTLINE_STYLE = 'none';

@@ -1,4 +1,3 @@
-import { expect, type Locator, type Page, test } from '@playwright/test';
 import { askErrors } from '../../../content/ask-errors';
 import { shellUi } from '../../../content/shell-ui';
 import { SITE_LOCALE } from '../../../content/site-locale';
@@ -8,6 +7,7 @@ import {
   MOCK_ASK_ANSWER,
   type MockState,
 } from '../../../tests/e2e/_helpers/mock-backend';
+import { expect, type Locator, type Page, test } from '../../../tests/e2e/_helpers/test';
 
 const SHELL_FORM = '[data-testid="shell-form"]';
 

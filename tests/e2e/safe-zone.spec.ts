@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const WIDTHS = [
   WIDTH.PHONE_NARROW,

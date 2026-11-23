@@ -1,9 +1,9 @@
-import { expect, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const FORM_SELECTOR = '[data-testid="contact-form"]';
 const WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.PHONE_COMPACT, WIDTH.PHONE] as const;

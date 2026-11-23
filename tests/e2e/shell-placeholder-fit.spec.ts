@@ -1,8 +1,8 @@
-import { expect, type Locator, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { CORE_COMPACT_WIDTHS, WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { openShell } from './_helpers/shell';
+import { expect, type Locator, type Page, test } from './_helpers/test';
 
 const VIEWPORT_HEIGHT = 844;
 const TABLET_WIDTH = WIDTH.TABLET;

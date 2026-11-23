@@ -1,8 +1,8 @@
-import { expect, type Page, test } from '@playwright/test';
 import { linksContent } from '../../content/links';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { horizontalOverflow, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const GOLDEN_RATIO = 1.618;
 const RATIO_TOLERANCE = 0.1;

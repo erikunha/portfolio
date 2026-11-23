@@ -1,6 +1,6 @@
-import { expect, type Locator, test } from '@playwright/test';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Locator, test } from './_helpers/test';
 
 const MOTION_TOGGLE = '.desktop-topbar button[aria-pressed]';
 const BELOW_FOLD_HEADER = '#sec-contact-header .module-scroll-type-text:visible';

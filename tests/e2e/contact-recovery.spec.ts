@@ -1,4 +1,3 @@
-import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { VIEWPORTS } from './_helpers/geometry';
@@ -6,6 +5,7 @@ import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend, type MockState } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { revealDeferredContent } from './_helpers/snapshot';
+import { expect, type Page, test } from './_helpers/test';
 
 const HOME_PATHS: Record<SiteLocale, string> = { en: '/', pt: '/pt' };
 const FORM_SELECTOR = '[data-testid="contact-form"]';

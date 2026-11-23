@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test';
 import { horizontalOverflow, settleFrames, VIEWPORTS } from './_helpers/geometry';
 import { installChunkedAsk } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR } from './_helpers/shell';
+import { expect, test } from './_helpers/test';
 
 const QUESTION = 'what does Erik build?';
 const PARTIAL = 'Erik builds agent platforms';

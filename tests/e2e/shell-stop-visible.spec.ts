@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { NARROW_PHONE_WIDTHS, settleFrames } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
+import { expect, test } from './_helpers/test';
 
 const VIEWPORT_HEIGHT = 844;
 const SHELL_INPUT = '[aria-label="shell command"]';

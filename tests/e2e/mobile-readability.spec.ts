@@ -1,9 +1,9 @@
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { DOCK_MENU, gotoHydrated } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 import { revealToTop } from './_helpers/to-top';
 
 const PHONE = { width: WIDTH.PHONE_COMPACT, height: 812 } as const;

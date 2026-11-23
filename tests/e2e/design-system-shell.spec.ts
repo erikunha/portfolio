@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { DS_PAGER } from '@/app/(en)/design-system/_components/ds-nav';
 import { CORE_LAPTOP_WIDTHS, horizontalOverflow, WIDTH } from './_helpers/geometry';
+import { expect, test } from './_helpers/test';
 
 const MIN_TARGET_PX = 24;
 const MOBILE_HEIGHT = 812;

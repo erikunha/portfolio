@@ -1,10 +1,10 @@
-import { expect, test } from '@playwright/test';
 import { careerCopy } from '../../content/git-log';
 import { heroContent } from '../../content/hero';
 import { profile } from '../../content/profile';
 import { READING_PATHS, readingViews } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { installMockBackend } from './_helpers/mock-backend';
+import { expect, test } from './_helpers/test';
 
 test.describe('reading views', { tag: '@cross-browser' }, () => {
   test('/cv renders the document with a working print button', async ({ page }) => {

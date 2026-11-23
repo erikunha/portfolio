@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Page, test } from './_helpers/test';
 import { scrollByInput } from './_helpers/to-top';
 
 const PHONE = { width: WIDTH.PHONE_COMPACT, height: 812 } as const;

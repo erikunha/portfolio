@@ -1,9 +1,9 @@
-import { expect, type Page, test } from '@playwright/test';
 import { NAVIGATION } from '../../content/navigation';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated, MOTION_TOPBAR_TOGGLE, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const { copy } = NAVIGATION[SITE_LOCALE.en];
 

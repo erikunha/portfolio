@@ -1,8 +1,8 @@
-import { expect, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { CORE_WIDTHS, horizontalOverflow, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const { DESKTOP, PHONE } = VIEWPORTS;
 const NOT_FOUND_STATUS = 404;

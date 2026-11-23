@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 test.describe('StatTile: behavioral E2E', () => {
   test('renders as a definition list (dl > dt + dd)', async ({ page }) => {

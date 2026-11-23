@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { installMockBackend, type MockState } from '../../../tests/e2e/_helpers/mock-backend';
 import { revealDeferredContent } from '../../../tests/e2e/_helpers/snapshot';
+import { expect, type Page, test } from '../../../tests/e2e/_helpers/test';
 
 const FORM_SELECTOR = '[data-testid="contact-form"]';
 

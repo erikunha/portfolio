@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
+import { expect, type Page, test } from '../../../tests/e2e/_helpers/test';
 
 const RAIN_CANVAS = 'canvas[style*="position: fixed"]';
 const TOGGLE = '.topbar-action-toggle';

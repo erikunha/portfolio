@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const MIN_TOUCH_TARGET_PX = 44;
 const SUBPIXEL_TOLERANCE_PX = 2;

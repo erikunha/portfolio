@@ -1,5 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
+import { expect, type Page, test } from './_helpers/test';
 
 const GOVERNED_CRT_ANIMATION = /^crt-/;
 const FULL_RATE_LEVEL = '0';

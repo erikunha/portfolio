@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { HIRE_ACCESSIBLE_NAME, HIRE_SHORT_LABEL } from '@/content/nav';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { VIEWPORTS } from '../../../tests/e2e/_helpers/geometry';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 test.use({ viewport: VIEWPORTS.DESKTOP });
 

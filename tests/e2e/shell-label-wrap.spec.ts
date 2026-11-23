@@ -1,9 +1,9 @@
-import { expect, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR, waitForConfirmArmed } from './_helpers/shell';
+import { expect, type Page, test } from './_helpers/test';
 
 const WIDTHS = [
   WIDTH.PHONE_NARROW,

@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
 import { WIDTH, waitForStableHref, waitForStablePosition } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const SECTION = 'sec-projects';
 const VIEWPORTS = [

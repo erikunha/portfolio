@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { PHONE_TO_TABLET_WIDTHS } from './_helpers/geometry';
 import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const VIEWPORT_HEIGHT = 812;
 const ROUTES = ['/', '/pt'] as const;

@@ -1,9 +1,9 @@
-import { expect, test } from '@playwright/test';
 import { MOBILE_BREAKPOINT_PX } from '../../lib/breakpoint';
 import { settleFrames } from './_helpers/geometry';
 import { installChunkedAsk } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR, shellCopy } from './_helpers/shell';
+import { expect, test } from './_helpers/test';
 
 const { ui } = shellCopy();
 const QUESTION = 'what does Erik build?';

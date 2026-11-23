@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { CORE_WIDTHS } from '../../../tests/e2e/_helpers/geometry';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 const MODULE_IDS = [
   'sec-shell',

@@ -1,4 +1,4 @@
-import { type APIResponse, expect, test } from '@playwright/test';
+import { type APIResponse, expect, test } from './_helpers/test';
 
 const SYNTHETIC_REQUEST_ID = '00000000-0000-4000-8000-000000000000';
 

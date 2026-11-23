@@ -1,8 +1,8 @@
-import { expect, type Page, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Page, test } from './_helpers/test';
 
 const MIXER = '#sec-guitar .guitar-mixer';
 const SKIP_LINK = `${MIXER} a.mixer-skip-link`;

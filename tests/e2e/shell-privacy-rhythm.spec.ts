@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { CORE_COMPACT_WIDTHS } from './_helpers/geometry';
 import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const VIEWPORT_HEIGHT = 900;
 const TARGET_PX = 44;

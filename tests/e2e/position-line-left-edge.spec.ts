@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { PHONE_TO_TABLET_WIDTHS } from './_helpers/geometry';
 import { DOCK_MENU, gotoHydrated } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const VIEWPORT_HEIGHT = 812;
 const LINE_PROBE_X = 1;

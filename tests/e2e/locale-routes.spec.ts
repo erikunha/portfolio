@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
 import { WIDTH } from './_helpers/geometry';
+import { expect, test } from './_helpers/test';
 
 // Address-based locales (DECISIONS 2026-08-30/2026-11-04): the bare address
 // serves English and never redirects; pt-BR lives under /pt. Each language

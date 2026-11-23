@@ -1,9 +1,9 @@
-import { expect, test } from '@playwright/test';
 import { askErrors } from '../../content/ask-errors';
 import { SITE_HTML_LANG, SITE_LOCALE } from '../../content/site-locale';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR, shellCopy, stopButton } from './_helpers/shell';
+import { expect, test } from './_helpers/test';
 
 const PT = SITE_LOCALE.pt;
 const { ui, states } = shellCopy(PT);

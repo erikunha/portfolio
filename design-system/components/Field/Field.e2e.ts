@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 const SIGNAL_RGB = 'rgb(0, 255, 65)';
 const ERROR_BORDER_RGB = 'rgb(255, 138, 138)';

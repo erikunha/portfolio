@@ -1,9 +1,9 @@
-import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { revealDeferredContent } from '../../../tests/e2e/_helpers/snapshot';
+import { expect, type Page, test } from '../../../tests/e2e/_helpers/test';
 
 const PHONE = VIEWPORTS.PHONE;
 const DESKTOP = { width: WIDTH.DESKTOP, height: 900 };

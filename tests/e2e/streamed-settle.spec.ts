@@ -1,8 +1,8 @@
-import { type BrowserContext, expect, type Page, test } from '@playwright/test';
 import { settleFrames } from './_helpers/geometry';
 import { gotoHydrated, MENU_TRIGGER } from './_helpers/hydration';
 import { drainRoutes } from './_helpers/routes';
 import { gotoSettled, PENDING_STREAMED, selfHostedFaceStatuses } from './_helpers/streamed';
+import { type BrowserContext, expect, type Page, test } from './_helpers/test';
 
 const BOUNDARY_SWAP = /\$RC\(("B:[^)]*)\)/g;
 const HELD_SWAP = '(window.__heldSwaps=window.__heldSwaps||[]).push(()=>$RC($1))';

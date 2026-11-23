@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Page, test } from './_helpers/test';
 
 const dot = (page: Page) => page.locator('button[data-motion] > span[aria-hidden="true"]').first();
 const animationName = (page: Page) =>

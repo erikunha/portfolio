@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 test.use({ viewport: { width: WIDTH.PHONE_COMPACT, height: 812 } });
 

@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { FOCUS_RING_TARGETS, focusByKeyboard } from './_helpers/focus-ring-targets';
 import { installMockBackend } from './_helpers/mock-backend';
+import { expect, test } from './_helpers/test';
 
 const NO_OUTLINE_STYLE = 'none';
 

@@ -1,4 +1,3 @@
-import { expect, test } from '@playwright/test';
 import { brandByLocale } from '@/content/brand';
 import { LINKS_PATH } from '@/content/links.constants';
 import { siteNavChrome } from '@/content/navigation';
@@ -6,6 +5,7 @@ import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { horizontalOverflow, PHONE_PAIR_WIDTHS, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated, MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const SHELL_PATHS: readonly { path: string; locale: SiteLocale }[] = [
   { path: '/', locale: SITE_LOCALE.en },

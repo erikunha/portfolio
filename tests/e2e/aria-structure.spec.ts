@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './_helpers/hydration';
+import { expect, test } from './_helpers/test';
 
 const SITE_HEADER_CONTROL = '.menu-trigger';
 const H1_LEVEL = 1;

@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { settleFrames, WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
+import { expect, test } from './_helpers/test';
 
 const REQUEST_ID = '3f1c9a2e-7b44-4d0a-9c1e-5a8d2b6f0e71';
 const ANSWER = 'Short answer.';

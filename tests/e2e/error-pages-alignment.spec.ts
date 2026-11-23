@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
 import { CORE_WIDTHS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const ROUTES = ['/this-route-does-not-exist', '/pt/rota-que-nao-existe'];
 const VIEWPORT_HEIGHT = 900;

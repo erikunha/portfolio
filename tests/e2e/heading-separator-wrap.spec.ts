@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const CASES: { path: string; locale: SiteLocale }[] = [
   { path: '/cv', locale: SITE_LOCALE.en },

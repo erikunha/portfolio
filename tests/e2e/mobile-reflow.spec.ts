@@ -1,6 +1,6 @@
-import { expect, type Locator, test } from '@playwright/test';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Locator, test } from './_helpers/test';
 
 const MOBILE = VIEWPORTS.PHONE;
 const DESKTOP = VIEWPORTS.DESKTOP;

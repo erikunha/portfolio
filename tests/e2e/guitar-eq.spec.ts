@@ -1,8 +1,8 @@
-import { expect, type Page, test } from '@playwright/test';
 import { guitarRig } from '../../content/guitar-rig';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { horizontalOverflow, VIEWPORTS as SHARED_VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Page, test } from './_helpers/test';
 
 const STRIP = '[data-testid="eq-spectrum"]';
 const BAR = `${STRIP} .eq-bar`;

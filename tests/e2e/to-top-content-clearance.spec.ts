@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 import { revealToTop, TO_TOP_NUDGE_PX } from './_helpers/to-top';
 
 const WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.PHONE_ANDROID, WIDTH.PHONE_COMPACT] as const;

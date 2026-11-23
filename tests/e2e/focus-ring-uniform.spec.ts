@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const SIGNAL_RGB = 'rgb(0, 255, 65)';
 const RING_WIDTH_PX = 2;

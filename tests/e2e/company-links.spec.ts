@@ -1,10 +1,10 @@
-import { expect, type Page, test } from '@playwright/test';
 import { gitLog } from '../../content/git-log';
 import { profile } from '../../content/profile';
 import { READING_PATHS } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Page, test } from './_helpers/test';
 
 const LINKED_JOBS = gitLog[SITE_LOCALE.en].flatMap((job) =>
   job.companyUrl ? [{ company: job.company, companyUrl: job.companyUrl }] : [],

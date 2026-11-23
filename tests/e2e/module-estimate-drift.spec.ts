@@ -1,5 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
+import { expect, type Page, test } from './_helpers/test';
 
 const LOCALES = [
   { name: 'en', path: '/' },

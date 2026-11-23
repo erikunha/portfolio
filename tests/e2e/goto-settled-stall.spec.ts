@@ -1,6 +1,6 @@
-import { type BrowserContext, expect, test } from '@playwright/test';
 import { drainRoutes } from './_helpers/routes';
 import { gotoSettled } from './_helpers/streamed';
+import { type BrowserContext, expect, test } from './_helpers/test';
 
 const STALLED_PATH = '/never-answers.js';
 const STALLED_QUERY = '?token=must-not-reach-the-log';
