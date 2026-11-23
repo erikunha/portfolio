@@ -119,7 +119,6 @@ None of these gates a PR (`ci-gate` waits only on the jobs in `ci.yml`). Job-lev
 | `mutation.yml`                   | Sunday 04:00 UTC, manual                        | Stryker mutation run; fails on no report, a blind runner, or a score under the `thresholds.break` floor |
 | `tool-pins.yml`                  | Monday 05:00 UTC, manual                        | `pnpm check:tool-pins`: fails when the pinned gitleaks or Semgrep version is behind the latest     |
 | `lockfile-resolution-probe.yml`  | Monday 08:00 UTC, manual                        | Resolves every range without a lockfile and keeps one issue open while the release-age window blocks it |
-| `weekly-metrics.yml`             | Monday 07:00 UTC, manual                        | Collects delivery metrics, checks them against `metrics/bands.json` and opens issues for breaches   |
 | `rollback-rehearsal.yml`         | Monday 06:00 UTC, manual                        | Rehearses the slow rollback described above                                                         |
 | `high-risk-label.yml`            | Pull request events                             | Adds or removes the `high-risk` label                                                               |
 | `smoke.yml`                      | Successful production deployment                | Post-deploy checks described under Release                                                          |

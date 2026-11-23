@@ -71,7 +71,6 @@ tsconfig.tsbuildinfo
 # leftover inbox from the learning loop deleted 2026-07-27, no writer remains
 .review-learnings.md
 
-
 # git worktrees (isolated workspaces for parallel branch work)
 .worktrees/
 
@@ -121,10 +120,6 @@ mutation-report.json
 __pycache__/
 *.pyc
 .vitest/
-
-# weekly metrics output (scripts/metrics); history lives in a workflow artifact
-/metrics/weekly.json
-/metrics/breaches.json
 
 # scratch scripts written at the repository root by a local demo (.ll_demo_*.mjs,
 # .ll_dbg_*.mjs, .probe_scroll.mjs and whatever name they take next): they are
