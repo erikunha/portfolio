@@ -7,14 +7,7 @@ import { installMockBackend } from './_helpers/mock-backend';
 import { expect, test } from './_helpers/test';
 
 test.describe('reading views', { tag: '@cross-browser' }, () => {
-  test('/cv renders the document with a working print button', async ({ page }) => {
-    await page.addInitScript(() => {
-      const w = window as unknown as { printCalls: number };
-      w.printCalls = 0;
-      window.print = () => {
-        w.printCalls += 1;
-      };
-    });
+  test('/cv renders the document and no print button', async ({ page }) => {
     await page.goto(READING_PATHS.cv);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(profile.displayName);
     await expect(
@@ -23,14 +16,7 @@ test.describe('reading views', { tag: '@cross-browser' }, () => {
         name: readingViews[SITE_LOCALE.en].cv.headings.experience,
       }),
     ).toBeVisible();
-    const print = page.getByRole('button', {
-      name: readingViews[SITE_LOCALE.en].shared.printLabel,
-    });
-    await expect(print).toBeVisible();
-    await print.click();
-    expect(
-      await page.evaluate(() => (window as unknown as { printCalls: number }).printCalls),
-    ).toBe(1);
+    await expect(page.locator('main#main-content').getByRole('button')).toHaveCount(0);
   });
 
   test('/cv print layout drops the site chrome and shows link URLs', async ({ page }) => {
@@ -45,7 +31,7 @@ test.describe('reading views', { tag: '@cross-browser' }, () => {
     expect(after).toContain('linkedin.com');
   });
 
-  test('/summary renders stats, projects and a print button', async ({ page }) => {
+  test('/summary renders stats and projects, with no print button', async ({ page }) => {
     await page.goto(READING_PATHS.summary);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(profile.displayName);
     await expect(page.locator('.reading-stats .stat-tile')).toHaveCount(
@@ -54,9 +40,7 @@ test.describe('reading views', { tag: '@cross-browser' }, () => {
     await expect(page.locator('.reading-projects > li')).toHaveCount(
       readingViews[SITE_LOCALE.en].summary.projectNames.length,
     );
-    await expect(
-      page.getByRole('button', { name: readingViews[SITE_LOCALE.en].shared.printLabel }),
-    ).toBeVisible();
+    await expect(page.locator('main#main-content').getByRole('button')).toHaveCount(0);
     await page
       .locator('main#main-content')
       .getByRole('link', { name: readingViews[SITE_LOCALE.en].summary.cvLinkLabel })

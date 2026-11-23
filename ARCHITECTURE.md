@@ -160,7 +160,6 @@ The section menu is a modal drawer at every width, opened by the menu icon trigg
 | DAW mixer islands                                 | Fader, dB readout, knob, RMS buttons and VU meter behavior                                                                               |
 | Footer client exports                             | Session counters, halt clock, reboot control and the last-request receipt                                                                |
 | ErrorBoundary and error pages                     | Failure capture; the error pages recover through `retry`, the prop Next's `ErrorBoundary` declares, never `reset`                         |
-| PrintButton                                       | Print action in `/summary` and `/cv`                                                                                                     |
 | `/links` client components                        | Tagline cycle, navigation progress, copy and subscribe actions                                                                           |
 | Design-system Sidebar, DsDrawerNav and CopyButton | Documentation page tree (side rail from 1024px, inside the site menu below it) and clipboard feedback                                    |
 
@@ -232,7 +231,7 @@ app/(en)/summary/page.tsx            # one-screen reading view: stats, CTAs, pro
 app/(en)/cv/page.tsx                 # full CV reading view and print control; header, actions row, then summary, skills, experience, education, community | certifications, contact
 components/reading/ReadingShell/ReadingShell.tsx        # SiteShell, reading-view and main wrapper shared by both reading views
 components/reading/ReadingSection/ReadingSection.tsx    # titled section block shared by /cv and /summary
-components/reading/ReadingActions/ReadingActions.tsx    # hire, cross-view and print action row shared by both reading views
+components/reading/ReadingActions/ReadingActions.tsx    # hire, cross-view and CV download action row shared by both reading views
 components/reading/CvPage/CvPage.tsx                    # /cv and /pt/cv body
 components/reading/SummaryPage/SummaryPage.tsx          # /summary and /pt/summary body
 app/(pt)/links/page.tsx              # pt-BR links page, in the pt-BR root layout
@@ -282,7 +281,6 @@ components/client/GlobalMotion/       # mounts TypeReveal and MatrixRainLazy fro
 components/client/DawMixer/           # fader, knob, R/M/S and VU meter islands and the drag-slider hook
 components/client/HeroSystemFailure/  # failure interaction in the Hero
 components/client/OfflineNotice/      # offline banner
-components/client/PrintButton/        # print action for /cv and /summary
 components/client/ToTopButton/        # scroll-to-top control
 components/client/InteractiveShell/   # streaming shell island
 components/client/InteractiveShell/transcript.ts  # Line union on kind, bounded appendLines, formatRemaining, transcriptReducer

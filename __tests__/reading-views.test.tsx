@@ -185,13 +185,10 @@ describe('CV reading view', () => {
     }
   });
 
-  it('links to the email, the summary view and a print button', () => {
+  it('links to the email and the summary view, and draws no button', () => {
     expect(page(host).querySelector(`a[href="mailto:${social.email}"]`)).not.toBeNull();
     expect(page(host).querySelector(`a[href="${READING_PATHS.summary}"]`)).not.toBeNull();
-    const print = Array.from(host.querySelectorAll('button')).find(
-      (button) => button.textContent === readingViewsEn.shared.printLabel,
-    );
-    expect(print).toBeDefined();
+    expect(host.querySelectorAll('main#main-content button')).toHaveLength(0);
   });
 
   it('marks the actions so print can hide them, and gives the shell skip link a target', () => {
@@ -239,12 +236,10 @@ describe('summary reading view', () => {
     );
   });
 
-  it('keeps the print action in the call to action row', () => {
+  it('keeps three links and no button in the call to action row', () => {
     const row = host.querySelector('.reading-actions');
-    const print = Array.from(row?.querySelectorAll('button') ?? []).find(
-      (button) => button.textContent === readingViewsEn.shared.printLabel,
-    );
-    expect(print).toBeDefined();
+    expect(row?.querySelectorAll('a')).toHaveLength(3);
+    expect(row?.querySelectorAll('button')).toHaveLength(0);
   });
 
   it('has one h1 with the name', () => {
@@ -324,7 +319,7 @@ describe('summary reading view', () => {
     });
   });
 
-  it('links to the full CV, LinkedIn and email, and has a print button', () => {
+  it('links to the full CV, LinkedIn and email, and draws no button', () => {
     expect(page(host).querySelector(`a[href="${READING_PATHS.cv}"]`)?.textContent).toBe(
       readingViewsEn.summary.cvLinkLabel,
     );
@@ -332,11 +327,7 @@ describe('summary reading view', () => {
       page(host).querySelector(`a[href="${social.linkedin}"]`)?.getAttribute('aria-label'),
     ).toBe(readingViewsEn.shared.hire.ariaLabel);
     expect(page(host).querySelector(`a[href="mailto:${social.email}"]`)).not.toBeNull();
-    expect(
-      Array.from(host.querySelectorAll('button')).some(
-        (button) => button.textContent === readingViewsEn.shared.printLabel,
-      ),
-    ).toBe(true);
+    expect(host.querySelectorAll('main#main-content button')).toHaveLength(0);
   });
 
   it('declares its canonical URL', () => {
