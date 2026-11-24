@@ -19,6 +19,11 @@ const BUILD_DATE = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
 const CSP_REPORT_PATH = '/api/csp-report';
 const CSP_REPORT_GROUP = 'csp-endpoint';
 
+const SPECULATION_RULES_PATH = '/speculation-rules.json';
+const SPECULATION_RULES_CONTENT_TYPE = 'application/speculationrules+json';
+const SPECULATION_RULES_MAX_AGE_SECONDS = 3600;
+const PAGE_ROUTES_SOURCE = '/((?!api/|_next/)[^.]*)';
+
 const REPORTING_DIRECTIVES: readonly string[] = [
   `report-to ${CSP_REPORT_GROUP}`,
   `report-uri ${CSP_REPORT_PATH}`,
@@ -68,6 +73,17 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' }],
   },
   headers: async () => [
+    {
+      source: PAGE_ROUTES_SOURCE,
+      headers: [{ key: 'Speculation-Rules', value: `"${SPECULATION_RULES_PATH}"` }],
+    },
+    {
+      source: SPECULATION_RULES_PATH,
+      headers: [
+        { key: 'Content-Type', value: SPECULATION_RULES_CONTENT_TYPE },
+        { key: 'Cache-Control', value: `public, max-age=${SPECULATION_RULES_MAX_AGE_SECONDS}` },
+      ],
+    },
     {
       source: '/(.*)',
       headers: [

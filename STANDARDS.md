@@ -153,7 +153,9 @@ never asserted: it is the total minus a constant, so gating it too would be a
 second threshold on the same axis that could never fire on its own.
 Any route that calls `headers()` / `cookies()` / `force-dynamic` and thereby
 opts out of static generation requires an ADR entry in `DECISIONS.md`
-justifying the cost.
+justifying the cost. Same-origin page links prefetch on hover through the
+`Speculation-Rules` header (`prefetch`, `moderate`); `prerender` waits for
+`document.prerendering` guards on the analytics and boot scripts.
 
 **Rationale.** A portfolio that is itself a Staff/Principal hiring artifact must
 demonstrate the budgets it claims to enforce. The honesty clause matters: a

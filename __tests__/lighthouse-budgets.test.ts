@@ -119,6 +119,11 @@ describe.each(budgets)('$name Lighthouse assertion ids', ({ config }) => {
     );
   });
 
+  it('keeps bf-cache an error: a document that cannot enter the back/forward cache is a regression', () => {
+    const entry = assertions['bf-cache'];
+    expect(Array.isArray(entry) ? entry[0] : entry).toBe(ERROR_LEVEL);
+  });
+
   it('keeps render-blocking-insight on, capped at three blocking resources', () => {
     const entry = assertions['render-blocking-insight'];
     expect(Array.isArray(entry) ? entry[0] : entry).not.toBe('off');

@@ -80,7 +80,7 @@
         "unused-css-rules": ["warn", { "maxLength": 10 }],
         "errors-in-console": "error",
 
-        "bf-cache": "warn",
+        "bf-cache": "error",
         "valid-source-maps": "off",
         "unminified-css": "warn",
         "unminified-javascript": "warn",

@@ -80,7 +80,7 @@
         "dom-size-insight": "off",
         "label-content-name-mismatch": "error",
 
-        "bf-cache": "warn",
+        "bf-cache": "error",
         "valid-source-maps": "off",
         "unused-css-rules": ["warn", { "maxLength": 10 }],
         "unminified-css": "warn",

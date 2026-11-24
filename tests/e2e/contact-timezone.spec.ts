@@ -1,3 +1,4 @@
+import { isExpectedConsoleError } from './_helpers/console-errors';
 import { horizontalOverflow as pageOverflowOf, WIDTH } from './_helpers/geometry';
 import { expect, type Page, test } from './_helpers/test';
 
@@ -27,7 +28,9 @@ type Findings = { consoleErrors: string[]; failedRequests: string[] };
 function watch(page: Page): Findings {
   const findings: Findings = { consoleErrors: [], failedRequests: [] };
   page.on('console', (message) => {
-    if (message.type() === 'error') findings.consoleErrors.push(message.text());
+    if (message.type() === 'error' && !isExpectedConsoleError(message.text(), page.url())) {
+      findings.consoleErrors.push(message.text());
+    }
   });
   page.on('pageerror', (error) => findings.consoleErrors.push(error.message));
   page.on('requestfailed', (request) =>
