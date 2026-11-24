@@ -116,7 +116,7 @@ describe('MatrixRain canvas perf', () => {
     ).toEqual(['2d', { willReadFrequently: true }]);
   });
 
-  it('caps the backing store at twice the CSS size however dense the display', async () => {
+  it('keeps the backing store at the CSS size however dense the display', async () => {
     vi.stubGlobal('devicePixelRatio', 3);
     const { MatrixRain } = await import('./MatrixRain.client');
 
@@ -128,8 +128,14 @@ describe('MatrixRain canvas perf', () => {
     mounted = await mountClient(createElement(MatrixRain, { fontSize: 16, speed: 0.7 }));
 
     const canvas = mounted.container.querySelector('canvas');
-    expect(canvas?.width, 'backing store width must stay at 2x CSS pixels').toBe(800);
-    expect(canvas?.height, 'backing store height must stay at 2x CSS pixels').toBe(600);
+    expect(
+      canvas?.width,
+      'backing store width must stay at 1x CSS pixels: every extra device pixel is a full-canvas commit per tick on the main thread',
+    ).toBe(400);
+    expect(
+      canvas?.height,
+      'backing store height must stay at 1x CSS pixels: every extra device pixel is a full-canvas commit per tick on the main thread',
+    ).toBe(300);
   });
 
   it('debounces the window resize handler', async () => {
