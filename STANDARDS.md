@@ -23,7 +23,7 @@ shell and its navigation chrome, the hero boot and system-failure animations,
 the interactive shell, the contact form and timezone panel, the DAW mixer
 controls, the role and tagline typewriters, the scroll type reveal, the Matrix
 rain and CRT overlay, the footer counters, the error boundaries and the
-print and to-top buttons. Every file under `app/`, `components/` and `lib/`
+to-top button. Every file under `app/`, `components/` and `lib/`
 that carries `'use client'` is named `*.client.ts(x)` (or lives under a
 `client/` directory), except Next's own `error.tsx` route files and the root
 `app/global-error.tsx`, whose names the framework fixes. The root route's static shell

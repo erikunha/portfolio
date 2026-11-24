@@ -138,14 +138,11 @@ test.describe('reading views share the home header', () => {
   });
 
   for (const { path, locale } of PAIRS) {
-    test(`${path} keeps the print action and the sibling reading link in the page body`, async ({
+    test(`${path} keeps no print action and the sibling reading link in the page body`, async ({
       page,
     }) => {
       await gotoSettled(page, path);
-      const shared = readingViews[locale].shared;
-      await expect(
-        page.locator(MAIN).getByRole('button', { name: shared.printLabel }),
-      ).toBeVisible();
+      await expect(page.locator(MAIN).getByRole('button')).toHaveCount(0);
       const sibling = path.endsWith(READING_PATHS.summary)
         ? readingViews[locale].cv.path
         : readingViews[locale].summary.path;
