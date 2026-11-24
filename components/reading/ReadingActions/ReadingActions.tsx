@@ -1,4 +1,3 @@
-import { PrintButton } from '@/components/client/PrintButton';
 import { EXTERNAL_LINK_PROPS } from '@/components/ExternalLink';
 import { readingViews } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
@@ -32,7 +31,6 @@ export function ReadingActions({
       <Button as="a" variant="secondary" href={cv.pdf.href} download>
         {cv.pdf.label}
       </Button>
-      <PrintButton label={shared.printLabel} />
     </div>
   );
 }

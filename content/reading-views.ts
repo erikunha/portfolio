@@ -50,7 +50,6 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
         ariaLabel: HIRE_ACCESSIBLE_NAME[locale],
         href: social.linkedin,
       },
-      printLabel: pt ? 'IMPRIMIR / SALVAR PDF' : 'PRINT / SAVE PDF',
       newTabHint: pt ? '(abre em uma nova guia)' : '(opens in a new tab)',
       ogImage: { path: '/og.png', width: 1200, height: 630 },
     },
