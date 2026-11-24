@@ -1001,7 +1001,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 ## 18. The single biggest risk
 
-The Hero boot loop and CRT effects are the most novel piece of the page and also the most fragile under the perf budget. Per-keystroke React state updates would add rendering work to the animation loop. Performance budgets still require runtime measurement.
+The Hero boot loop and CRT effects are the most novel piece of the page and also the most fragile under the perf budget. Per-keystroke React state updates would add rendering work to the animation loop. Performance budgets still require runtime measurement. The six full-viewport CRT layers force a compositor draw every frame while any of them animates, and a blend mode adds a backdrop read to each draw, so the noise and mask layers composite normally instead of with `mix-blend-mode: screen` (software compositing CPU down about 40%, same look; `DECISIONS.md` 2026-11-24).
 
 Mitigation: the loop uses `useRef.textContent` mutation rather than per-keystroke `useState`, enforced structurally by the boot-animation component test. The one runtime long-task/INP e2e guard (`tests/e2e/cross-cutting.spec.ts`) gates the interactive shell's keystroke commit (<50ms, no long task >100ms), not the boot loop itself, the boot loop is guarded at the pattern level, the shell at the runtime level.
 

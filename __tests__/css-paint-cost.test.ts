@@ -78,4 +78,16 @@ describe('paint cost CSS (shipped build assets)', () => {
       'scanline gradient is pure black, so any blend mode only adds a full-viewport backdrop copy per frame',
     ).not.toContain('mix-blend-mode');
   });
+  it.each(['.crt-mask', '.crt-noise'])('the %s layer carries no blend mode', (selector) => {
+    // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot composite blend modes
+    const crt = readFileSync(path.resolve(__dirname, '../app/css/crt.css'), 'utf-8');
+    const layer =
+      crt.match(new RegExp(`${selector.replace('.', '\\.')}\\s*\\{[^}]+\\}`))?.[0] ?? '';
+    expect(layer).not.toBe('');
+    expect(layer).toContain('opacity:');
+    expect(
+      layer,
+      'a screen blend makes the software compositor copy the backdrop for a full-viewport layer on every frame; over the black page it equals source-over at this opacity',
+    ).not.toContain('mix-blend-mode');
+  });
 });
