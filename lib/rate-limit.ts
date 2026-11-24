@@ -23,8 +23,24 @@ type LimiterSpec = {
 const ERROR_LOG_DAILY_CAP = 500;
 const ERROR_LOG_IP_DAILY_CAP = 50;
 const ERROR_LOG_GLOBAL_KEY = 'global';
+const VITALS_DAILY_CAP = 20_000;
+const VITALS_IP_DAILY_CAP = 40;
+const VITALS_GLOBAL_KEY = 'global';
 
 const LIMITERS = {
+  vitals: { algorithm: 'slidingWindow', limit: 30, window: '1 m', prefix: 'rl:vitals' },
+  vitalsDaily: {
+    algorithm: 'fixedWindow',
+    limit: VITALS_DAILY_CAP,
+    window: '1 d',
+    prefix: 'rl:vitals:day',
+  },
+  vitalsIpDaily: {
+    algorithm: 'fixedWindow',
+    limit: VITALS_IP_DAILY_CAP,
+    window: '1 d',
+    prefix: 'rl:vitals:ipday',
+  },
   ask: { algorithm: 'slidingWindow', limit: 8, window: '1 h', prefix: 'rl:ask' },
   contact: { algorithm: 'slidingWindow', limit: 3, window: '10 m', prefix: 'rl:contact' },
   mcp: { algorithm: 'slidingWindow', limit: 60, window: '1 m', prefix: 'rl:mcp' },
@@ -109,6 +125,24 @@ export function getErrorLogDailyLimit(): GlobalRateLimiter {
 
 export function getErrorLogIpDailyLimit(): ClientRateLimiter {
   return limiterFor('errorLogIpDaily');
+}
+
+export function getVitalsLimit(): ClientRateLimiter {
+  return limiterFor('vitals');
+}
+
+let _vitalsDailyLimit: GlobalRateLimiter | undefined;
+
+export function getVitalsDailyLimit(): GlobalRateLimiter {
+  if (!_vitalsDailyLimit) {
+    const shared = limiterFor('vitalsDaily');
+    _vitalsDailyLimit = { limit: () => shared.limit(VITALS_GLOBAL_KEY) };
+  }
+  return _vitalsDailyLimit;
+}
+
+export function getVitalsIpDailyLimit(): ClientRateLimiter {
+  return limiterFor('vitalsIpDaily');
 }
 
 export function getForgetLimit(): ClientRateLimiter {

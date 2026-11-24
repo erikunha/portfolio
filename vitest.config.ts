@@ -131,6 +131,7 @@ export const DOM_TS_TESTS = [
   'lib/report-client-error.digest.test.ts',
   'lib/request-refs.test.ts',
   'lib/section-spy.test.ts',
+  'lib/vitals/report.client.test.ts',
 ] as const;
 
 const EXCLUDED = [

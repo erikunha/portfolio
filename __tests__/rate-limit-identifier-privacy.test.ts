@@ -114,6 +114,19 @@ const ROUTES: Record<string, { prefixes: string[]; call: RouteCall }> = {
       return POST(jsonPost('http://localhost/api/log', ip, { level: 'error', message: 'boom' }));
     },
   },
+  vitals: {
+    prefixes: ['rl:vitals'],
+    call: async (ip) => {
+      const { POST } = await import('@/app/api/vitals/route');
+      return POST(
+        jsonPost('http://localhost/api/vitals', ip, {
+          path: '/',
+          vw: 1280,
+          metrics: [{ name: 'CLS', value: 0.01 }],
+        }),
+      );
+    },
+  },
   forget: {
     prefixes: ['rl:forget'],
     call: async (ip) => {

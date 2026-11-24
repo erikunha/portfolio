@@ -42,7 +42,7 @@ fails when a Lighthouse assertion is lowered, warned or turned off. Fix the meas
 - Static sections ship zero JS. A client file is named `*.client.tsx` and justifies its weight
   against the app-owned headroom.
 - The hero boot loop mutates `useRef.textContent`. Moving it to per-keystroke state breaks INP.
-- Vercel Speed Insights and Web Analytics are the only analytics. Do not add another script.
+- Vercel Speed Insights and Web Analytics are the only third-party analytics. Do not add another script. The first-party field vitals reporter (`lib/vitals/`, read with `pnpm vitals:report`) loads after idle and is how a perf change is measured in the field.
 
 ## Running the gates together
 

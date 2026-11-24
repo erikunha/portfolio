@@ -65,7 +65,7 @@ flowchart TD
     api5["POST /api/csp-report"]
     api6["GET /api/erik.json"]
     api7["GET /api/lighthouse"]
-    api8["POST /api/log · POST /api/log/forget"]
+    api8["POST /api/log · POST /api/log/forget · POST /api/vitals"]
     api9["GET · POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
     api10["GET /api/contact-retry (cron, twice a day)"]
     api11["GET /api/error-digest (cron, daily)"]
