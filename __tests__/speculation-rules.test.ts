@@ -114,5 +114,6 @@ describe('speculation rules', () => {
     const { where } = rulesFile().prefetch[0] as { where: Predicate };
     for (const path of PAGE_ROUTES) expect(admits(where, path), path).toBe(true);
     for (const path of NON_PAGE_PATHS) expect(admits(where, path), path).toBe(false);
+    expect(admits(where, '/api'), '/api').toBe(false);
   });
 });

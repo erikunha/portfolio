@@ -753,6 +753,8 @@ Vercel Speed Insights collects real-user Core Web Vitals when `VERCEL=1`. The re
 
 Internal links are plain `<a>` elements, so a page change is a cold document fetch. `next.config.ts` `headers()` sends `Speculation-Rules: "/speculation-rules.json"` on every page route (not on `/api/*`, `/_next/*` or any path with a dot), and `public/speculation-rules.json`, served as `application/speculationrules+json`, holds one document rule: `prefetch` at `eagerness: "moderate"`. It admits same-origin paths and refuses `/api/*`, file extensions (the CV PDFs), any `href` with a query, `rel~=nofollow`, `target=_blank` and `download`. The header form adds no inline script, so the CSP does not change. There is no `proxy.ts`, so a prefetch request (`Sec-Purpose: prefetch`) reaches no rate limiter, and the analytics scripts run only when the navigation commits. Prerender is not used: it would run the analytics scripts and the hero boot animation before activation (`DECISIONS.md` 2026-11-24). `tests/e2e/speculation-prefetch.spec.ts` proves the prefetch request and the excluded links in Chromium.
 
+Hovering a link to `/` or `/pt` runs their request-time sections (one to four Upstash reads, reads only; a PageSpeed fetch only on a 25 h cache miss), the same work as a visit. A bare `/api` and a link to the current page (`aria-current=page`) are refused.
+
 ### GitHub client
 
 `scripts/ci/wait-argos-reference.ts` and `scripts/gates/check-tool-pins.ts` share one GitHub client, `createGithubClient` in `scripts/lib/github-client.ts`. It takes `token`, `tokenHosts`, `userAgent`, `timeoutMs` and `retries`, sends the token only to a host in `tokenHosts` (default `api.github.com`) and the API version header only to `api.github.com`.
