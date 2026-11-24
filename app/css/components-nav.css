@@ -238,8 +238,7 @@
     bottom: 0;
     z-index: var(--z-dock);
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(min-content, 1fr);
+    grid-template-columns: repeat(var(--dock-columns), minmax(min-content, 1fr));
     gap: var(--spacing-hair);
     height: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px));
     padding: var(--spacing-2) var(--spacing-2)
