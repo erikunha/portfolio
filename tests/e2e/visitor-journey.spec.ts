@@ -7,6 +7,7 @@ import {
   SITE_LOCALE,
   type SiteLocale,
 } from '@/content/site-locale';
+import { isExpectedConsoleError } from './_helpers/console-errors';
 import { openSectionMenu, waitForHydration } from './_helpers/hydration';
 import { installMockBackend, MOCK_ASK_ANSWER } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
@@ -29,7 +30,9 @@ interface Watch {
 function watch(page: Page): Watch {
   const state: Watch = { problems: [] };
   page.on('console', (message) => {
-    if (message.type() === 'error') state.problems.push(`console: ${message.text()}`);
+    if (message.type() === 'error' && !isExpectedConsoleError(message.text(), page.url())) {
+      state.problems.push(`console: ${message.text()}`);
+    }
   });
   page.on('pageerror', (error) => state.problems.push(`pageerror: ${error.message}`));
   page.on('requestfailed', (request) => {

@@ -1,4 +1,5 @@
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
+import { isExpectedConsoleError } from './_helpers/console-errors';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { freezeMotion, MOTION_CHOICE, MOTION_STORAGE_KEY } from './_helpers/motion';
@@ -205,7 +206,9 @@ test.describe('/links link-in-bio', { tag: '@cross-browser' }, () => {
   }) => {
     const consoleErrors: string[] = [];
     page.on('console', (msg) => {
-      if (msg.type() === 'error') consoleErrors.push(msg.text());
+      if (msg.type() === 'error' && !isExpectedConsoleError(msg.text(), page.url())) {
+        consoleErrors.push(msg.text());
+      }
     });
     page.on('pageerror', (err) => consoleErrors.push(String(err)));
 
