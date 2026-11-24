@@ -1,0 +1,18 @@
+{
+  "prefetch": [
+    {
+      "where": {
+        "and": [
+          { "href_matches": "/*" },
+          { "not": { "href_matches": "/api/*" } },
+          { "not": { "href_matches": "/*.*" } },
+          { "not": { "selector_matches": "[href*=\"?\"]" } },
+          { "not": { "selector_matches": "[rel~=nofollow]" } },
+          { "not": { "selector_matches": "[target=_blank]" } },
+          { "not": { "selector_matches": "[download]" } }
+        ]
+      },
+      "eagerness": "moderate"
+    }
+  ]
+}
