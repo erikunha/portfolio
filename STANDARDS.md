@@ -176,6 +176,10 @@ app-owned split (total minus the measured 131.4 KB framework floor, so 32.8 KB
 of headroom) on every run without asserting it. The
 `force-dynamic` ADR rule is held by PR review against this chapter.
 
+A performance change follows published Core Web Vitals guidance and web performance literature,
+is measured before and after against the field metrics (LCP, INP, CLS) first, and may change the
+design; motion, WCAG 2.2 AA, the budgets and every variant still bind (`DECISIONS.md` 2026-11-24).
+
 ---
 
 ## 4. Testing
