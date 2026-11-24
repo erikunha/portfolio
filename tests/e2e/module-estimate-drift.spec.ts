@@ -1,4 +1,5 @@
 import { WIDTH } from './_helpers/geometry';
+import { gotoSettled } from './_helpers/streamed';
 import { expect, type Page, test } from './_helpers/test';
 
 const LOCALES = [
@@ -89,7 +90,7 @@ test.describe('deferred module estimates', () => {
       tag: '@cross-browser',
     }, async ({ page }) => {
       await page.setViewportSize({ width: WIDTH.DESKTOP, height: VIEWPORT_HEIGHT });
-      await page.goto(locale.path, { waitUntil: 'networkidle' });
+      await gotoSettled(page, locale.path);
 
       const touch = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
       const widths = touch ? SWEEP_WIDTHS.filter((w) => w < TOUCH_SWEEP_BELOW_PX) : SWEEP_WIDTHS;

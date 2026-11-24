@@ -1,3 +1,4 @@
+import { gotoSettled } from './_helpers/streamed';
 import { expect, test } from './_helpers/test';
 
 // Every element's line box is a whole number of pixels.
@@ -107,7 +108,7 @@ test.describe('line boxes are whole pixels', { tag: '@cross-browser' }, () => {
         'this browser has no CSS round(); the line box stays fractional there by design',
       );
 
-      await page.goto(route, { waitUntil: 'networkidle' });
+      await gotoSettled(page, route);
 
       const offenders = await fractionalLineBoxes(page);
 
@@ -127,7 +128,7 @@ test.describe('line boxes are whole pixels', { tag: '@cross-browser' }, () => {
         'this browser has no CSS round(); the line box stays fractional there by design',
       );
 
-      await page.goto(route, { waitUntil: 'networkidle' });
+      await gotoSettled(page, route);
 
       const offenders = await inheritedLeading(page);
 

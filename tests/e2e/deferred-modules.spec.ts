@@ -1,4 +1,5 @@
 import { WIDTH } from './_helpers/geometry';
+import { gotoSettled } from './_helpers/streamed';
 import { expect, test } from './_helpers/test';
 
 const WIDTHS = [
@@ -22,7 +23,7 @@ test.describe('deferred modules', () => {
   for (const width of WIDTHS) {
     test(`no deferred module lays content past its own box at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
-      await page.goto('/', { waitUntil: 'networkidle' });
+      await gotoSettled(page, '/');
 
       const modules = await page.locator('.module-deferred').evaluateAll((els) =>
         els.map((el) => {
