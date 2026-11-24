@@ -336,7 +336,7 @@ components/responsive/MobileTitleBar/  # phone title bar: menu, language switch,
 components/responsive/Dock/            # bottom dock
 components/responsive/PositionMeter/   # scroll-position line
 components/responsive/CRTOverlay/      # the six CRT layers and the frame governor hook-up
-components/responsive/MatrixRain/      # canvas Matrix Rain and its lazy loader
+components/responsive/MatrixRain/      # canvas Matrix Rain (CPU 2D context, backing store at 1x CSS size) and its lazy loader
 components/CompanyLink/                # server component: company name as a link with a new-tab disclosure
 components/LocaleSwitch/               # EN · PT link pair rendered by the language switch
 components/NoscriptBar/                # no-JavaScript notice, first element in the body
