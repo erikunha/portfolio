@@ -31,7 +31,7 @@ type IdleWindow = Window & {
   requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
   cancelIdleCallback?: (handle: number) => void;
 };
-const MAX_BACKING_DPR = 2;
+const MAX_BACKING_DPR = 1;
 const RAIN_CONTEXT_OPTIONS: CanvasRenderingContext2DSettings = { willReadFrequently: true };
 
 type RainCfg = {
