@@ -107,11 +107,11 @@ export function Hero({ locale }: { locale: SiteLocale }) {
         className="hero-desktop hero-frame"
         data-testid="hero-desktop"
       >
-        <div className="hero-terminal">
-          <HeroBootAnimation variant="desktop" copy={bootCopy} />
-        </div>
         <div className="hero-bio">
           <HeroIdentity locale={locale} primary />
+        </div>
+        <div className="hero-terminal">
+          <HeroBootAnimation variant="desktop" copy={bootCopy} />
         </div>
         <HeroSystemFailure plate={bootCopy.systemFailurePlate} />
       </section>
