@@ -117,17 +117,6 @@ E2E_LINKS_FEED_FIXTURE=tests/e2e/fixtures/links-feed.json ... rebuild with it se
 
 ---
 
-## Terms used
-
-- **RSC**: React Server Component, a component that renders on the server and ships no JavaScript.
-- **INP**: Interaction to Next Paint, the delay between an input and the next frame.
-- **TBT**: Total Blocking Time, the main-thread time lost to long tasks during load.
-- **Lighthouse CI**: Lighthouse run in CI against a local production server, with assertions.
-- **Argos**: the hosted service that compares Playwright screenshots against approved baselines.
-- **Stryker**: the mutation testing tool; it edits code and checks that a test fails.
-
----
-
 ## License
 
 Source code: MIT. Content (copy, CV data, opinions, biographical material): all rights reserved. Forking to learn from the architecture is welcome; replacing my name with yours is not.
