@@ -30,6 +30,7 @@
     "generate:icons": "tsx scripts/codegen/generate-brand-icons.ts",
     "generate:discovery": "tsx scripts/codegen/generate-discovery-files.ts",
     "ask:eval": "TSX_TSCONFIG_PATH=scripts/eval/tsconfig.eval.json tsx scripts/eval/ask-eval.ts",
+    "vitals:report": "tsx --env-file-if-exists=.env.local scripts/vitals-report.ts",
     "bundle-check": "tsx scripts/gates/check-bundle-size.ts",
     "route-js-check": "tsx scripts/gates/check-route-js.ts",
     "check:client-naming": "tsx scripts/gates/check-client-naming.ts",
@@ -124,6 +125,7 @@
     "remark-gfm": "^4.0.1",
     "resend": "^6.38.1",
     "shiki": "~4.6.0",
+    "web-vitals": "^6.2.3",
     "zod": "~4.6.7"
   },
   "browserslist": [

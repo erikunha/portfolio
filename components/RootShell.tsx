@@ -6,6 +6,7 @@ import localFont from 'next/font/local';
 import { Suspense } from 'react';
 import { getThemeColors } from '@/app/(en)/design-system/_lib/theme-tokens';
 import { GlobalMotion } from '@/components/client/GlobalMotion';
+import { VitalsReporter } from '@/components/client/VitalsReporter';
 import { NoscriptBar } from '@/components/NoscriptBar';
 import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
 import { personSchema, SITE_KEYWORDS, SITE_NAME } from '@/content/seo';
@@ -111,6 +112,7 @@ export function RootShell({
         <GlobalMotion />
       </Suspense>
       {children}
+      <VitalsReporter />
       {process.env.VERCEL === '1' && (
         <>
           <Analytics />

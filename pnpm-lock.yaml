@@ -107,6 +107,9 @@ importers:
       shiki:
         specifier: ~4.6.0
         version: 4.6.0
+      web-vitals:
+        specifier: ^6.2.3
+        version: 6.2.3
       zod:
         specifier: ~4.6.7
         version: 4.6.7
@@ -4600,6 +4603,9 @@ packages:
 
   web-namespaces@2.0.1:
     resolution: {integrity: sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ==}
+
+  web-vitals@6.2.3:
+    resolution: {integrity: sha512-Dmy+vdO1UPMqXiAtZSNayhl4f794Bxfd94W4HIj2HlYtczEQfEOon969memlcpcHrTuOKLa5baFjX7WbgmOq+A==}
 
   webdriver-bidi-protocol@1.0.1:
     resolution: {integrity: sha512-WXWs/aXF2a6Al1Z2/V/7Gp2oPZOAAmHjJOTmv4KCXRJ122IMj3tSSMc6a4q3K4QOmhQbse/Ahr+oTVJOU2dUiw==}
@@ -9296,6 +9302,8 @@ snapshots:
   weapon-regex@2.0.6: {}
 
   web-namespaces@2.0.1: {}
+
+  web-vitals@6.2.3: {}
 
   webdriver-bidi-protocol@1.0.1: {}
 

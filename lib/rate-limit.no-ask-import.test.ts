@@ -11,6 +11,9 @@ const LIMITER_EXPORTS = [
   'getHealthzLimit',
   'getLighthouseLimit',
   'getMcpLimit',
+  'getVitalsDailyLimit',
+  'getVitalsIpDailyLimit',
+  'getVitalsLimit',
 ];
 
 describe('lib/rate-limit runtime exports', () => {
