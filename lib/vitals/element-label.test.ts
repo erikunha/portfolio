@@ -9,6 +9,9 @@ describe('elementLabel', () => {
     ['div.card>img', { tag: 'img' }],
     ['SECTION#sec-projects>H2:nth-child(2)', { tag: 'h2', landmark: 'sec-projects' }],
     ['h1', { tag: 'h1' }],
+    ['#sec-projects', { landmark: 'sec-projects' }],
+    ['#bio', { landmark: 'bio' }],
+    ['#contact-email', { landmark: 'contact-email' }],
   ])('reduces %s to a tag and a landmark id', (selector, label) => {
     expect(elementLabel(selector)).toEqual(label);
   });

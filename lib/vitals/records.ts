@@ -35,7 +35,10 @@ export function routeKey(pathname: string): string {
 }
 
 function elementKey(tag: string | undefined, landmark: string | undefined): string | undefined {
-  if (tag === undefined) return undefined;
+  if (tag === undefined)
+    return landmark === undefined || landmark === OTHER
+      ? undefined
+      : `${OTHER}${ELEMENT_SEPARATOR}${landmark}`;
   return landmark === undefined ? tag : `${tag}${ELEMENT_SEPARATOR}${landmark}`;
 }
 

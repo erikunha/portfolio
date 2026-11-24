@@ -14,7 +14,7 @@ const MAX_ID_CHARS = 40;
 const MAX_VIEWPORT_WIDTH = 100_000;
 const MAX_TIME_MS = 120_000;
 const MAX_CLS_VALUE = 100;
-const RELEASE_PATTERN = /^[A-Za-z0-9._-]+$/;
+const RELEASE_PATTERN = /^[0-9a-f]{7,40}$/;
 
 const KNOWN_TAGS: ReadonlySet<string> = new Set([
   'a',

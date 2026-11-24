@@ -3,7 +3,7 @@
 import { getRedis, hasRedisCredentials } from '@/lib/redis';
 import { formatVitals, summarizeVitals } from '@/lib/vitals/aggregate';
 import { parseReportArgs } from '@/lib/vitals/report-args';
-import { vitalsKey } from '@/lib/vitals/store';
+import { vitalsKey, weekCapWarning } from '@/lib/vitals/store';
 
 const EXIT_BAD_ARGUMENTS = 2;
 const EXIT_NO_CREDENTIALS = 3;
@@ -26,6 +26,8 @@ async function main(): Promise<void> {
   }
   const { week, release, route, json } = parsed.args;
   const raw = await getRedis().lrange(vitalsKey(week), 0, -1);
+  const capWarning = weekCapWarning(raw.length);
+  if (capWarning !== undefined) console.error(capWarning);
   const groups = summarizeVitals(raw).filter(
     (group) =>
       (release === undefined || group.release === release) &&

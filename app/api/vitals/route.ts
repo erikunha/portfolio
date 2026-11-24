@@ -1,7 +1,7 @@
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { getVitalsDailyLimit, getVitalsIpDailyLimit, getVitalsLimit } from '@/lib/rate-limit';
-import { getRedis } from '@/lib/redis';
+import { getRedis, hasRedisCredentials } from '@/lib/redis';
 import type { RateLimitIdentifier } from '@/lib/server/rate-limit-key';
 import { defineHandler, err, ok } from '@/lib/server/route';
 import { toVitalRecords } from '@/lib/vitals/records';
@@ -36,6 +36,7 @@ export const POST = defineHandler({
   rateLimit: getVitalsLimit,
   rateLimitErrorMessage: 'too many vitals reports',
   async handler({ body, ipHash, requestId }) {
+    if (!hasRedisCredentials()) return ok({ requestId });
     if (!(await underDailyCaps(ipHash, requestId))) return ok({ requestId });
     try {
       await storeVitals(getRedis(), toVitalRecords(body), new Date());

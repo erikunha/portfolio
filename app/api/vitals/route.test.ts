@@ -29,7 +29,11 @@ function chain() {
   return tx;
 }
 
-vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ multi: chain })) }));
+const hasCredentials = vi.fn(() => true);
+vi.mock('@/lib/redis', () => ({
+  getRedis: vi.fn(() => ({ multi: chain })),
+  hasRedisCredentials: () => hasCredentials(),
+}));
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '203.0.113.7') }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip') }));
 vi.mock('@/lib/rate-limit', async () =>
@@ -111,6 +115,7 @@ describe('POST /api/vitals', () => {
     ipDailyLimit.mockResolvedValue({ success: true });
     dailyLimit.mockResolvedValue({ success: true });
     exec.mockResolvedValue([]);
+    hasCredentials.mockReturnValue(true);
   });
 
   it('stores one compact record per metric under the weekly key with a 21 day TTL and a cap', async () => {
@@ -185,6 +190,38 @@ describe('POST /api/vitals', () => {
       route: 'home',
       device: 'desktop',
     });
+  });
+
+  it.each([
+    ['sec-projects', 'other@sec-projects'],
+    ['bio', 'other@bio'],
+  ])('keeps the landmark of an id-only selector (#%s) as %s', async (landmark, el) => {
+    await call(post({ path: '/', vw: 1280, metrics: [{ name: 'CLS', value: 0.2, landmark }] }));
+
+    expect(storedRecords()[0]).toMatchObject({ el });
+  });
+
+  it('stores no label for an id-only selector with a contact field id outside the landmarks', async () => {
+    await call(
+      post({
+        path: '/',
+        vw: 1280,
+        metrics: [{ name: 'CLS', value: 0.2, landmark: 'contact-email' }],
+      }),
+    );
+
+    expect(storedRecords()[0]).not.toHaveProperty('el');
+  });
+
+  it('answers ok without logging or writing when Redis credentials are absent', async () => {
+    hasCredentials.mockReturnValue(false);
+
+    const res = await call(post(VALID));
+
+    expect(res.status).toBe(200);
+    expect(logWarn).not.toHaveBeenCalled();
+    expect(ipDailyLimit).not.toHaveBeenCalled();
+    expect(lpush).not.toHaveBeenCalled();
   });
 
   it('files a path outside the known routes under other', async () => {

@@ -24,7 +24,7 @@ const ERROR_LOG_DAILY_CAP = 500;
 const ERROR_LOG_IP_DAILY_CAP = 50;
 const ERROR_LOG_GLOBAL_KEY = 'global';
 const VITALS_DAILY_CAP = 20_000;
-const VITALS_IP_DAILY_CAP = 300;
+const VITALS_IP_DAILY_CAP = 40;
 const VITALS_GLOBAL_KEY = 'global';
 
 const LIMITERS = {
