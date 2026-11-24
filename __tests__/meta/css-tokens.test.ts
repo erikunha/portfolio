@@ -25,6 +25,7 @@ const CSS_DIR = path.join(REPO_ROOT, 'app', 'css');
 const RUNTIME_SET = new Set([
   '--ctz-x',
   '--ctz-y',
+  '--dock-columns',
   '--eb-min-height',
   '--eq-bar-cycle',
   '--eq-bar-delay',

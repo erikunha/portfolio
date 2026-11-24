@@ -1,5 +1,6 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import { ExternalLink } from '@/components/ExternalLink';
 import type { DockKey } from '@/content/navigation';
 import {
@@ -31,7 +32,12 @@ export function Dock() {
   const navigation = chrome.navigation;
 
   return (
-    <nav className="dock" aria-label={copy.dockLabel} data-position-target="">
+    <nav
+      className="dock"
+      aria-label={copy.dockLabel}
+      data-position-target=""
+      style={{ '--dock-columns': navigation.dock.length } as CSSProperties}
+    >
       {navigation.dock.map(({ key, label, sectionId, href, accessibleName, lang }) => {
         const current = active === key ? 'location' : undefined;
         if (key === 'menu') {
