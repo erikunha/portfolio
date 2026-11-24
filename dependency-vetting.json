@@ -119,6 +119,10 @@
     "purpose": "Vercel Speed Insights, mounted in components/RootShell.tsx",
     "license": "Apache-2.0"
   },
+  "web-vitals": {
+    "purpose": "field LCP, INP and CLS attribution, loaded after idle by lib/vitals/report.client.ts",
+    "license": "Apache-2.0"
+  },
   "@vitest/coverage-v8": {
     "purpose": "V8 coverage provider for pnpm test:coverage",
     "license": "MIT"

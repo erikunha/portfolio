@@ -67,6 +67,17 @@ describe('browser RUM (Vercel Analytics + Speed Insights)', () => {
     expect(names).not.toContain('SpeedInsights');
   });
 
+  it('mounts the first-party vitals reporter with or without VERCEL', async () => {
+    for (const vercel of ['1', '']) {
+      vi.stubEnv('VERCEL', vercel);
+      vi.resetModules();
+      const { RootShell } = await import('@/components/RootShell');
+      expect(componentNames(RootShell({ locale: SITE_LOCALE.en, children: null }))).toContain(
+        'VitalsReporter',
+      );
+    }
+  });
+
   it('CSP connect-src allows the two Vercel ingest origins', async () => {
     vi.resetModules();
     const { default: config } = await import('@/next.config');
