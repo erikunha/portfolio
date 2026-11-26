@@ -113,7 +113,7 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/otel": "^2.3.0",
     "@vercel/speed-insights": "^2.1.0",
-    "ai": "^7.0.173",
+    "ai": "^7.0.177",
     "clsx": "^2.1.1",
     "langfuse-vercel": "^3.39.2",
     "mcp-handler": "^2.4.0",
@@ -123,7 +123,7 @@
     "react-dom": "~19.3.1",
     "rehype-pretty-code": "~0.14.6",
     "remark-gfm": "^4.0.1",
-    "resend": "^6.38.1",
+    "resend": "^6.39.0",
     "shiki": "~4.6.0",
     "web-vitals": "^6.2.3",
     "zod": "~4.6.7"
@@ -136,7 +136,7 @@
     "not dead"
   ],
   "devDependencies": {
-    "@argos-ci/playwright": "^7.8.0",
+    "@argos-ci/playwright": "^7.10.0",
     "@axe-core/playwright": "^4.14.0",
     "@biomejs/biome": "~2.6.8",
     "@commitlint/cli": "^21.2.4",
@@ -150,7 +150,7 @@
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.10",
+    "@testing-library/user-event": "^14.6.13",
     "@types/mdx": "^2.0.14",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
