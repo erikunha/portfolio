@@ -1,5 +1,6 @@
 'use client';
 
+import { recoverFromChunkLoadError } from '@/lib/chunk-load-recovery.client';
 import { RETRY_AFTER_HEADER } from '@/lib/stream-protocol';
 import { MS_PER_MINUTE, MS_PER_SECOND } from '@/lib/time';
 
@@ -126,6 +127,7 @@ function errorStack(value: unknown): string | undefined {
 
 function handleError(state: BridgeState, event: ErrorEvent): void {
   report(state, event.message ?? 'unknown error', errorStack(event.error));
+  recoverFromChunkLoadError(event.error ?? event.message);
 }
 
 function handleRejection(state: BridgeState, event: PromiseRejectionEvent): void {
@@ -133,6 +135,7 @@ function handleRejection(state: BridgeState, event: PromiseRejectionEvent): void
   const reasonText = typeof reason === 'string' ? reason : 'unhandled promise rejection';
   const message = reason instanceof Error ? reason.message : reasonText;
   report(state, message, errorStack(reason));
+  recoverFromChunkLoadError(reason);
 }
 
 function install(win: Window): void {
