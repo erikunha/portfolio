@@ -238,7 +238,7 @@ jobs:
           trigger_phrase: /claude-review
           claude_args: >-
             --allowedTools "Read,Grep,Glob,Task(review-worker),mcp__github_inline_comment__create_inline_comment"
-            --disallowedTools "Edit,MultiEdit,Write,NotebookEdit,WebFetch,WebSearch,Task(general-purpose),Task(claude),Task(Explore),Task(Plan),Task(statusline-setup),Task(claude-code-guide),Bash,Bash(git add:*),Bash(git commit:*),Bash(git rm:*),Bash(/home/runner/work/_actions/anthropics/claude-code-action/f3b070c88125d33dbae5653df5f143101d4ea9dc/scripts/git-push.sh:*),mcp__github_file_ops__commit_files,mcp__github_file_ops__delete_files,Read(**/.git/**),Read(//proc/**),Read(~/.ssh/**),Read(~/.gitconfig),Read(~/.git-credentials),Read(~/.config/**),Read(~/.npmrc),Read(~/.docker/**),Read(~/.claude/**),Read(//home/runner/work/_temp/**)"
+            --disallowedTools "Edit,MultiEdit,Write,NotebookEdit,WebFetch,WebSearch,Task(general-purpose),Task(claude),Task(Explore),Task(Plan),Task(statusline-setup),Task(claude-code-guide),Bash,Bash(git add:*),Bash(git commit:*),Bash(git rm:*),Bash(/home/runner/work/_actions/anthropics/claude-code-action/f431adaf77e0fecf918431e75a2b5b45b85af002/scripts/git-push.sh:*),mcp__github_file_ops__commit_files,mcp__github_file_ops__delete_files,Read(**/.git/**),Read(//proc/**),Read(~/.ssh/**),Read(~/.gitconfig),Read(~/.git-credentials),Read(~/.config/**),Read(~/.npmrc),Read(~/.docker/**),Read(~/.claude/**),Read(//home/runner/work/_temp/**)"
             --add-dir pr-head
             --add-dir /tmp/review-evidence
             --append-system-prompt-file /tmp/claude-review-prompt.md
