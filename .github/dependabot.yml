@@ -8,6 +8,16 @@ updates:
     cooldown:
       default-days: 7
     groups:
+      ai-sdk:
+        applies-to: version-updates
+        patterns:
+          - ai
+          - "@ai-sdk/*"
+      vitest:
+        applies-to: version-updates
+        patterns:
+          - vitest
+          - "@vitest/*"
       security:
         applies-to: security-updates
         patterns:
