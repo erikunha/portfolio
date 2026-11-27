@@ -85,18 +85,31 @@ for (const { width, height } of NARROW_ERROR_VIEWPORTS) {
 const CONTACT_CHUNK_MARKER = 'contact-send';
 const CONTACT_SECTION = '#sec-contact';
 const TAP_TARGET_PX = 44;
+const DOCUMENT_LOADS_WITH_ONE_RECOVERY = 2;
 
 test.describe('crashed island', { tag: '@cross-browser' }, () => {
   test.afterEach(({ page }) => drainRoutes(page));
 
-  test('keeps a dashed box, explains itself and offers a 44px reload', async ({ page }) => {
+  test('reloads once, then keeps a dashed box, explains itself and offers a 44px reload', async ({
+    page,
+  }) => {
     await page.route('**/_next/static/chunks/**/*.js', async (route) => {
       const response = await route.fetch();
       const body = await response.text();
       if (body.includes(CONTACT_CHUNK_MARKER)) return route.abort();
       return route.fulfill({ response, body });
     });
+    let documentLoads = 0;
+    page.on('domcontentloaded', () => {
+      documentLoads += 1;
+    });
     await page.goto('/');
+    await expect
+      .poll(() => documentLoads, {
+        message: 'a chunk that fails to load reloads the page once before the fallback stays',
+      })
+      .toBe(DOCUMENT_LOADS_WITH_ONE_RECOVERY);
+    await page.waitForLoadState('load');
     await page.locator(CONTACT_SECTION).scrollIntoViewIfNeeded();
     const fallback = page.locator('.eb-fallback');
     await expect(fallback).toBeVisible();

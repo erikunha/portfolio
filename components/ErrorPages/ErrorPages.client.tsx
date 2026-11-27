@@ -6,6 +6,7 @@ import { PageMain } from '@/components/PageMain';
 import { NOT_FOUND_PATH_TOKEN } from '@/content/errors.constants';
 import type { ErrorsContent } from '@/content/schemas';
 import { Button, CmdLine } from '@/design-system';
+import { recoverFromChunkLoadError } from '@/lib/chunk-load-recovery.client';
 import { reportClientError } from '@/lib/report-client-error.client';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 import { ErrorHeading } from './ErrorHeading.client';
@@ -91,6 +92,7 @@ export function useErrorReport(prefix: string, error: Error): BootStamps {
   useEffect(() => {
     const rendered = bootStamp(performance.now());
     reportClientError(prefix, error);
+    recoverFromChunkLoadError(error);
     setStamps({ rendered, reported: bootStamp(performance.now()) });
   }, [prefix, error]);
   return stamps;

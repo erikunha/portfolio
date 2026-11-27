@@ -4,6 +4,7 @@ import { Component, type CSSProperties, type ReactNode } from 'react';
 
 import { errorsClientContent } from '@/content/errors-client';
 import { DEFAULT_SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { recoverFromChunkLoadError } from '@/lib/chunk-load-recovery.client';
 import { reportClientError } from '@/lib/report-client-error.client';
 
 const MIN_HEIGHT_VAR = '--eb-min-height';
@@ -32,6 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch(error: Error, info: { componentStack?: string | null }) {
     reportClientError('[ErrorBoundary]', error, info.componentStack);
+    recoverFromChunkLoadError(error);
   }
 
   override render() {
