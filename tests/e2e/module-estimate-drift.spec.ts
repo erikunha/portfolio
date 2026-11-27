@@ -43,6 +43,12 @@ const SWEEP_WIDTHS = [
   ]),
 ].sort((a, b) => a - b);
 
+const SWEEP_TESTS_PER_LOCALE = 8;
+const WIDTHS_PER_TEST = Math.ceil(SWEEP_WIDTHS.length / SWEEP_TESTS_PER_LOCALE);
+const SWEEP_SLICES = Array.from({ length: SWEEP_TESTS_PER_LOCALE }, (_, slice) =>
+  SWEEP_WIDTHS.slice(slice * WIDTHS_PER_TEST, (slice + 1) * WIDTHS_PER_TEST),
+);
+
 const VIEWPORT_HEIGHT = 800;
 const SUBPIXEL_TOLERANCE_PX = 1;
 const PERCENT = 100;
@@ -86,37 +92,44 @@ async function readModules(page: Page): Promise<Reading[]> {
 
 test.describe('deferred module estimates', () => {
   for (const locale of LOCALES) {
-    test(`${locale.name}: each placeholder stays within its limit of the content it stands for from ${SWEEP_WIDTHS[0]}px to ${SWEEP_WIDTHS.at(-1)}px`, {
-      tag: '@cross-browser',
-    }, async ({ page }) => {
-      await page.setViewportSize({ width: WIDTH.DESKTOP, height: VIEWPORT_HEIGHT });
-      await gotoSettled(page, locale.path);
+    for (const slice of SWEEP_SLICES) {
+      test(`${locale.name}: each placeholder stays within its limit of the content it stands for from ${slice[0]}px to ${slice.at(-1)}px`, {
+        tag: '@cross-browser',
+      }, async ({ page }) => {
+        const touch = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+        const widths = touch ? slice.filter((w) => w < TOUCH_SWEEP_BELOW_PX) : slice;
+        test.skip(
+          widths.length === 0,
+          `a touch context is swept below ${TOUCH_SWEEP_BELOW_PX}px only, and this slice starts above it`,
+        );
 
-      const touch = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
-      const widths = touch ? SWEEP_WIDTHS.filter((w) => w < TOUCH_SWEEP_BELOW_PX) : SWEEP_WIDTHS;
-      const drift: string[] = [];
-      let readings = 0;
-      for (const width of widths) {
-        await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
-        for (const { id, placeholder, content } of await readModules(page)) {
-          const limit = OVERSHOOT_LIMIT[id as keyof typeof OVERSHOOT_LIMIT];
-          expect(limit, `#${id} has no overshoot limit in this spec`).toBeDefined();
-          readings += 1;
-          const over = placeholder / content - 1;
-          if (placeholder < content - SUBPIXEL_TOLERANCE_PX) {
-            drift.push(
-              `#${id} at ${width}px: placeholder ${Math.round(placeholder)}px is shorter than its ${Math.round(content)}px content, so its rows lie over the next section before it paints. Raise --module-estimate to at least ${Math.ceil(content)}px.`,
-            );
-          } else if (over > limit) {
-            drift.push(
-              `#${id} at ${width}px: placeholder ${Math.round(placeholder)}px is ${Math.round(over * PERCENT)}% taller than its ${Math.round(content)}px content (limit ${limit * PERCENT}%), so the page jumps ${Math.round(placeholder - content)}px when it resolves. Lower --module-estimate to at most ${Math.floor(content * (1 + limit))}px.`,
-            );
+        await page.setViewportSize({ width: WIDTH.DESKTOP, height: VIEWPORT_HEIGHT });
+        await gotoSettled(page, locale.path);
+
+        const drift: string[] = [];
+        let readings = 0;
+        for (const width of widths) {
+          await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
+          for (const { id, placeholder, content } of await readModules(page)) {
+            const limit = OVERSHOOT_LIMIT[id as keyof typeof OVERSHOOT_LIMIT];
+            expect(limit, `#${id} has no overshoot limit in this spec`).toBeDefined();
+            readings += 1;
+            const over = placeholder / content - 1;
+            if (placeholder < content - SUBPIXEL_TOLERANCE_PX) {
+              drift.push(
+                `#${id} at ${width}px: placeholder ${Math.round(placeholder)}px is shorter than its ${Math.round(content)}px content, so its rows lie over the next section before it paints. Raise --module-estimate to at least ${Math.ceil(content)}px.`,
+              );
+            } else if (over > limit) {
+              drift.push(
+                `#${id} at ${width}px: placeholder ${Math.round(placeholder)}px is ${Math.round(over * PERCENT)}% taller than its ${Math.round(content)}px content (limit ${limit * PERCENT}%), so the page jumps ${Math.round(placeholder - content)}px when it resolves. Lower --module-estimate to at most ${Math.floor(content * (1 + limit))}px.`,
+              );
+            }
           }
         }
-      }
 
-      expect(readings).toBe(widths.length * Object.keys(OVERSHOOT_LIMIT).length);
-      expect(drift, `${drift.length} readings out of bounds`).toEqual([]);
-    });
+        expect(readings).toBe(widths.length * Object.keys(OVERSHOOT_LIMIT).length);
+        expect(drift, `${drift.length} readings out of bounds`).toEqual([]);
+      });
+    }
   }
 });
