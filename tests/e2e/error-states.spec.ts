@@ -100,8 +100,8 @@ test.describe('crashed island', { tag: '@cross-browser' }, () => {
       return route.fulfill({ response, body });
     });
     let documentLoads = 0;
-    page.on('framenavigated', (frame) => {
-      if (frame === page.mainFrame()) documentLoads += 1;
+    page.on('domcontentloaded', () => {
+      documentLoads += 1;
     });
     await page.goto('/');
     await expect
