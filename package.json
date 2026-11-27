@@ -103,7 +103,7 @@
     }
   },
   "dependencies": {
-    "@ai-sdk/otel": "^1.0.173",
+    "@ai-sdk/otel": "^1.0.177",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@modelcontextprotocol/server": "^2.4.0",
@@ -113,7 +113,7 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/otel": "^2.3.0",
     "@vercel/speed-insights": "^2.1.0",
-    "ai": "^7.0.173",
+    "ai": "^7.0.177",
     "clsx": "^2.1.1",
     "langfuse-vercel": "^3.39.2",
     "mcp-handler": "^2.4.0",
@@ -123,7 +123,7 @@
     "react-dom": "~19.3.1",
     "rehype-pretty-code": "~0.14.6",
     "remark-gfm": "^4.0.1",
-    "resend": "^6.38.1",
+    "resend": "^6.39.0",
     "shiki": "~4.6.0",
     "web-vitals": "^6.2.3",
     "zod": "~4.6.7"
@@ -136,7 +136,7 @@
     "not dead"
   ],
   "devDependencies": {
-    "@argos-ci/playwright": "^7.8.0",
+    "@argos-ci/playwright": "^7.10.0",
     "@axe-core/playwright": "^4.14.0",
     "@biomejs/biome": "~2.6.8",
     "@commitlint/cli": "^21.2.4",
@@ -150,14 +150,14 @@
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.10",
+    "@testing-library/user-event": "^14.6.13",
     "@types/mdx": "^2.0.14",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
-    "@vitest/coverage-v8": "^5.1.0",
-    "@vitest/ui": "^5.1.0",
+    "@vitest/coverage-v8": "^5.1.1",
+    "@vitest/ui": "^5.1.1",
     "husky": "^9.1.7",
     "jsdom": "^31.0.1",
     "pino-pretty": "^13.2.0",
@@ -168,7 +168,7 @@
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "vite": "^8.3.8",
-    "vitest": "^5.1.0",
+    "vitest": "^5.1.1",
     "wait-on": "^9.5.1",
     "yaml": "^2.9.1"
   }

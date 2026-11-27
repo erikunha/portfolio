@@ -54,7 +54,10 @@ describe('dependabot.yml and the install-time release-age window', () => {
       expect(security).toHaveLength(1);
       expect(majors).toHaveLength(1);
       expect(rest).toHaveLength(1);
-      expect(Object.keys(groups).sort()).toEqual(['majors', 'rest', 'security']);
+      const peerGroups = update['package-ecosystem'] === 'npm' ? ['ai-sdk', 'vitest'] : [];
+      expect(Object.keys(groups).sort()).toEqual(
+        ['majors', 'rest', 'security', ...peerGroups].sort(),
+      );
     },
   );
 
